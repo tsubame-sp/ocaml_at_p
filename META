@@ -1,0 +1,8 @@
+name="ocaml@p"
+version="1.0"
+description="debug printer with [@p] marks"
+requires=""
+ppx="./ocaml@p"
+archive(byte)="ppshow.cmo"
+archive(native)="ppshow.cmx"
+linkopts = ""
