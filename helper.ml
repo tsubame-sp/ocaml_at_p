@@ -378,7 +378,7 @@ let rec select_pp typ =
                     then make_Texp_ident (path_set path) ~typ:typ
                     else make_Texp_apply (make_Texp_ident (path_ident_create "_pp__dump") ~typ:typ)
                                          [Nolabel,Some (make_Texp_constant 
-                                                            (Const_string ("< Unsupported Type > : Maybe not compiled "^m^".ml by ocaml@p",None)))]
+                                                            (Const_string ("< Unsupported Type > : You may not compile "^m^".ml by ocaml@p or may not write [@@@ppopen]",None)))]
             end
     | Tconstr (path,typelist,_) ->
             begin match Path.name path with
@@ -393,7 +393,7 @@ let rec select_pp typ =
                     then make_Texp_apply (make_Texp_ident (path_set path) ~typ:typ) (typelist_to_arglist typelist)
                     else make_Texp_apply (make_Texp_ident (path_ident_create "_pp__dump") ~typ:typ)
                                          [Nolabel,Some (make_Texp_constant 
-                                                            (Const_string ("< Unsupported Type > : Maybe not compiled "^m^".ml by ocaml@p",None)))]
+                                                            (Const_string ("< Unsupported Type > : You may be not compiled "^m^".ml by ocaml@p or may not write [@@@ppopen]",None)))]
                     
             end
     | Tobject _ -> failwith "Tobject"
