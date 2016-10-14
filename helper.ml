@@ -3,6 +3,7 @@ open Format
 open Types
 open Typedtree
 open Longident
+open Ident
 
 (* ppopen check *)
 let ppopen = ref []

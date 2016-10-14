@@ -1,12 +1,16 @@
 open Asttypes
 open Typedtree
 open Helper
+open Longident
 
 (* _this_ expression *)
 let expr_this typ =
     { exp_desc = Texp_ident (Path.Pident (Ident.create "_this_"),
                              {txt = Lident "_this_";loc = Location.none},
-                             {val_type = typ;val_kind=Val_reg;val_loc=Location.none;val_attributes=[]});
+                             {Types.val_type = typ;
+                              Types.val_kind=Types.Val_reg;
+                              Types.val_loc=Location.none;
+                              Types.val_attributes=[]});
       exp_loc = Location.none;
       exp_extra = [];
       exp_type = typ;

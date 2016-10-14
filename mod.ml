@@ -4,6 +4,7 @@ open Asttypes
 open Helper
 open Insert
 open Create
+open Longident
 
 let pe s = pp_print_string std_formatter s;
            pp_print_newline std_formatter ()
@@ -21,13 +22,13 @@ module MapArg : TypedtreeMap.MapArgument = struct
         let rec pickup_attr = function
             | [] -> expr_this expr.exp_type
             (* print argument with newline *)
-            | ({txt = "p";_},Parsetree.PStr [{pstr_desc=Pstr_eval (print_ast_expr,_);_}])::xs -> 
+            | ({txt = "p";_},Parsetree.PStr [{Parsetree.pstr_desc=Parsetree.Pstr_eval (print_ast_expr,_);_}])::xs -> 
                     insert_pp (pickup_attr xs) (Typecore.type_expression expr.exp_env print_ast_expr) true
             (* print expression with newline *)
             | ({txt = "p";_},Parsetree.PStr [])::xs ->
                     insert_pp (pickup_attr xs) (expr_this expr.exp_type) true
             (* print argument *)
-            | ({txt = "ps";_},Parsetree.PStr [{pstr_desc=Pstr_eval (print_ast_expr,_);_}])::xs -> 
+            | ({txt = "ps";_},Parsetree.PStr [{Parsetree.pstr_desc=Parsetree.Pstr_eval (print_ast_expr,_);_}])::xs -> 
                     insert_pp (pickup_attr xs) (Typecore.type_expression expr.exp_env print_ast_expr) false
             (* print expression *)
             | ({txt = "ps";_},Parsetree.PStr [])::xs ->
@@ -69,7 +70,6 @@ module MapArg : TypedtreeMap.MapArgument = struct
             loop [] [] ls
         in
         let (extra_attr,extra) = check_extra expr.exp_extra in
-        let ret = ref expr in
         if List.length expr.exp_attributes = 0
         then if List.length extra_attr = 0
              then expr
@@ -93,11 +93,12 @@ module MapArg : TypedtreeMap.MapArgument = struct
                     select_str_item (make_pp_class_set cdslist (str_item :: acc)) xs
             (* ppopen *)
             | {str_desc = 
-                Tstr_attribute ({txt="ppopen";_},
-                                PStr ([{pstr_desc = 
-                                    Pstr_eval ({pexp_desc=Pexp_construct ({txt = Lident name;_},_);_},_);_}]))}::xs ->
-                    ppopen := name :: !ppopen;
-                    select_str_item acc xs
+                Tstr_attribute
+                   ({txt="ppopen";_},
+                    Parsetree.PStr ([{Parsetree.pstr_desc = Parsetree.Pstr_eval ({Parsetree.pexp_desc=Parsetree.Pexp_construct ({txt = Lident name;_},_);_},_);_}])
+                   )}::xs ->
+                       ppopen := name :: !ppopen;
+                       select_str_item acc xs
             (* module ppopen *)
             | ({str_desc = Tstr_module ({mb_name = {txt=name;_}; mb_expr = me;_} as mb);_} as str_item)::xs ->
                     ppopen := name :: !ppopen;

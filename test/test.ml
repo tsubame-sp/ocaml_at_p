@@ -1,4 +1,5 @@
 [@@@ppopen Mylist]
+
 open Mylist.M
 
 module M2 : sig
@@ -6,10 +7,8 @@ module M2 : sig
     val first : t -> int
 end = struct
     type t = int * string
-    let first (a : t) = fst (a [@p])
+    let first (a : t) = fst a
 end
-
-let p_id a = a [@p]
 
 type m = int
 
@@ -117,7 +116,6 @@ let _ = MCons (10,MNil) [@p]
 let _ = length (MCons ('A',MNil)) [@p]
 let _ = ((10,"abc") : M2.t) [@p]
 let _ = M2.first ((1,"abc") : M2.t) [@p]
-let _ = p_id 10
 
 let _ = (10 : m') [@p]
 let _ = A 100 [@p]

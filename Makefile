@@ -3,40 +3,49 @@
 #macro define
 FIND = ocamlfind
 OC = ocamlc
-FA = -w -A -package compiler-libs.common -linkpkg
-FB = -w -A -package typpx,compiler-libs.common -linkpkg
+OPT = ocamlopt
+FA = -package compiler-libs.common -linkpkg
+FB = -package typpx,compiler-libs.common -linkpkg
 
-LINK = helper.cmo insert.cmo create.cmo mod.cmo ocaml@p.cmo
+LINK = helper.cmo insert.cmo create.cmo mod.cmo ocaml_at_p.cmo
+OLINK = helper.cmx insert.cmx create.cmx mod.cmx ocaml_at_p.cmx
 
-#ocamlc
-build: ocaml@p
-
-ocaml@p : ppshow.cmo helper.cmo insert.cmo create.cmo mod.cmo ocaml@p.cmo
-	$(FIND) $(OC) $(FB) -o ocaml@p ${LINK}
+#build
+build: ppshow.cmo ppshow.cmx ocaml_at_p.opt
 
 ppshow.cmo : ppshow.ml
 	$(FIND) $(OC) $(FA) -c ppshow.ml
 
-helper.cmo : helper.ml
-	$(FIND) $(OC) $(FA) -c helper.ml
+ppshow.cmx : ppshow.ml
+	$(FIND) $(OPT) $(FA) -c ppshow.ml
 
-insert.cmo : insert.ml
-	$(FIND) $(OC) $(FA) -c insert.ml
+#ocamlopt
+ocaml_at_p.opt : helper.cmx insert.cmx create.cmx mod.cmx ocaml_at_p.cmx
+	$(FIND) $(OPT) $(FB) -o ocaml_at_p.opt ${OLINK}
 
-create.cmo : create.ml
-	$(FIND) $(OC) $(FA) -c create.ml
+helper.cmx : helper.ml
+	$(FIND) $(OPT) $(FA) -c helper.ml
 
-mod.cmo : create.ml
-	$(FIND) $(OC) $(FB) -c mod.ml
+insert.cmx : insert.ml
+	$(FIND) $(OPT) $(FA) -c insert.ml
 
-ocaml@p.cmo : ocaml@p.ml
-	$(FIND) $(OC) $(FB) -c ocaml@p.ml
+create.cmx : create.ml
+	$(FIND) $(OPT) $(FA) -c create.ml
 
+mod.cmx : mod.ml
+	$(FIND) $(OPT) $(FB) -c mod.ml
+
+ocaml_at_p.cmx : ocaml_at_p.ml
+	$(FIND) $(OPT) $(FB) -c ocaml_at_p.ml
+
+#install,uninstall
 install : build
-	$(FIND) install ocaml@p META ocaml@p ppshow.cm*
+	-$(FIND) remove ocaml@p
+	$(FIND) install ocaml@p META ocaml_at_p.opt ppshow.cm* ppshow.o
 
 uninstall:
 	-$(FIND) remove ocaml@p
 
+#clean
 clean:
-	-rm *.cm* ocaml@p
+	-rm *.cm* *.o ocaml_at_p.opt

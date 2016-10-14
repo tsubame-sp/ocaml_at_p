@@ -1,5 +1,7 @@
+open Asttypes
 open Typedtree
 open Helper
+open Longident
 
 (* case_list table for type_extension & poly variant *)
 let caselist_tbl = Hashtbl.create 10
@@ -190,6 +192,7 @@ let make_ext_expr ty_name ex_cons_list =
                                   [make_Texp_constant (Const_string (name,None));
                                    make_cps_expr 1 core_type_list]} :: acc)
                     xs
+        | _ -> failwith "TODO"
     in
     let start = List.rev (Hashtbl.find caselist_tbl ty_name) in
     let case_list = make_caselist_from_exconslist start ex_cons_list in
@@ -230,7 +233,7 @@ let make_pp_sig_type_ext type_ext ret =
 let from_classfields class_fields =
     let rec make_pp_fields = function
         | [] -> make_Texp_construct (Lident "[]") []
-        | { cf_desc = Tcf_method ({txt=name;_},Public,Tcfk_concrete (_,{exp_type={desc=Tarrow (_,_,typ,_)};_}));_ }::xs ->
+        | { cf_desc = Tcf_method ({txt=name;_},Public,Tcfk_concrete (_,{exp_type={Types.desc=Types.Tarrow (_,_,typ,_)};_}));_ }::xs ->
                 let typ_s = Format.asprintf "%a" Printtyp.type_expr typ in
                 make_Texp_construct
                     (Lident "::")
@@ -277,6 +280,8 @@ let rec make_exp_class class_expr =
     | Tcl_apply (c_exp,_) ->
             make_exp_class c_exp
     | Tcl_constraint (c_exp,_,_,_,_) ->
+            make_exp_class c_exp
+    | Tcl_let (_,_,_,c_exp) ->
             make_exp_class c_exp
 
 (* set from class_declaration_list *)
