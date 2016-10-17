@@ -1,5 +1,6 @@
-# ocaml_at_p
-OCaml@p : OCamlにおけるデバッグ出力機構 / A debugging printer for OCaml
+[Japanese]
+
+# OCaml@p : OCamlにおけるデバッグ出力機構 
 
 OCamlプログラムのデバッグ出力をサポートするツールです．このパッケージを用いてコンパイルすると，型定義から型に対応した出力関数定義を自動生成します．また，マーカ[@p]のついた式を出力する関数呼び出しを自動で挿入します．
 
@@ -24,7 +25,7 @@ ocamlfind ocamlc -package ocaml@p -linkpkg a.ml
 
 ###出力マーカ [@p]
 
-OCaml@pでは返す値を出力したい式にマーカ[@p]を記述することで，出力することができます．
+OCaml@pでは返す値を出力したい式にマーカ[@p]を記述することで，出力することができます．マーカはOCamlのattribute構文を用いています．
 
 
 ```
@@ -33,7 +34,7 @@ let add x y = x + y [@p x] [@p y] [@p]
 let a = add 1 10
 ```
 
-ここで，`[@p x],[@p y],[@p]`は式`x + y`に付与されています．`[@p x],[@p y]`はそれぞれ`x,y`の値を，`[@p]`は`x + y`の値を出力します．このプログラムを事項した時の出力結果は以下のようになります．
+ここで，`[@p x],[@p y],[@p]`は式`x + y`に付与されています．`[@p x],[@p y]`はそれぞれ`x,y`の値を，`[@p]`は`x + y`の値を出力します．このプログラムを実行した時の出力結果は以下のようになります．
 
 ```
 1 			<- [@p x] の出力
@@ -43,4 +44,53 @@ let a = add 1 10
 
 ###外部モジュールチェック [@@@ppopen]
 
-本システムでは他のmlファイルで定義されたモジュール内で定義されたデータ型を出力する際に，出力関数が定義されているか確かめる術がないため，Unboundエラーが出てしまい、エラー内容がわかりづらい．そこで，そのモジュールのmlファイルがOCaml@pを用いてコンパイルされていることを、ユーザが出力を行うファイルのトップレベルに`[@@@ppopen モジュール名]`と記述するようにした．
+本システムでは他のmlファイル内で定義されたデータ型を出力する際に，出力関数が定義されているか確かめる術がないため，Unboundエラーが出てしまい、エラー内容がわかりづらい．そこで，そのモジュールのmlファイルがOCaml@pを用いてコンパイルされていることを、ユーザが出力を行うファイルのトップレベルに`[@@@ppopen モジュール名]`と記述するようにした．
+
+---
+
+[English]
+
+#OCaml@p : A debugging printer for OCaml
+
+OCaml@p is a tool supporting debug in OCaml programming. When you compile a program by this package, this system make definition of print function automatically, and insert function call to print expression attached marker [@p] automatically.
+
+note : The system don't consider use in combination with other PPX tools using attributes.
+
+#How to use
+
+##install
+install -> make install
+
+uninstall -> make uninstall
+
+TODO : opam release
+
+##How to compile with OCaml@p
+
+When you compile a.ml with OCaml@p
+
+`ocamlfind ocamlc(ocamlopt) -package ocaml@p -linkpkg a.ml`
+
+##How to write code
+
+###Marker for print
+
+In OCaml@p, when you write marker [@p] behind expression that you want to print the return value, so you can print. The marker [@p] is attribute syntax in OCaml.
+
+```
+let add x y = x + y [@p x] [@p y] [@p]
+
+let a = add 1 10
+```
+
+Then，markers (`[@p x],[@p y],[@p]`) are attached the expression (`x + y`)．Two marker `[@p x]` and `[@p y]` are used to print values of expressions `x` and `y` ，and the marker `[@p]` is the value of the expression `x + y`．The following is result of run the program.
+
+```
+1 			<- [@p x] の出力
+10			<- [@p y] の出力
+11			<- [@p]   の出力
+```
+
+###Outer module check [@@@ppopen]
+
+The system cannot be sure to define print function that print a value of datatype defined in other ml files, so it is difficulty for users to understand error messages. Then, users need to write `[@@@ppopen module_name]` in Toplevel of ml file written markers to be clear that the ml files of module are compiled by OCaml@p.
