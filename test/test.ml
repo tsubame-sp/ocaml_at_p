@@ -20,8 +20,9 @@ type 'a vv = 'a v = A of 'a
 
 type ('a,'b) v2 = A of 'a | B of 'b | C of 'a
 
-and ('a,'b) v3 = Tup of ('a * 'b) | Lis of ('a * 'b) list
-                | Fun of ('a -> 'b)
+and ('a,'b) v3 = Tup of ('a * 'b)
+               | Lis of ('a * 'b) list
+               | Fun of ('a -> 'b)
 
 type r = {a:int list;b:float*string}
 
