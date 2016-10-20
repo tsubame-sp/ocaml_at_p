@@ -7,6 +7,8 @@ note : The system don't consider use in combination with other PPX tools using a
 #How to use
 
 ##installation
+require : OCaml 4.03.0
+
 install
 
 ```
@@ -62,6 +64,8 @@ OCamlプログラムのデバッグ出力をサポートするツールです．
 #使用方法
 
 ##インストール方法
+require : OCaml 4.03.0
+
 install
 
 ```
