@@ -7,27 +7,29 @@ note : The system don't consider use in combination with other PPX tools using a
 #How to use
 
 ##installation
-require : OCaml 4.03.0
+required OCaml version : OCaml 4.03.0
+
+opam released
 
 install
 
 ```
-make install
+opam install ocaml_at_p
 ```
 
 uninstall
 
 ```
-make uninstall
+make remove ocaml_at_p
 ```
-
-TODO : opam release
 
 ##How to compile with OCaml@p
 
 When you compile a.ml with OCaml@p
 
-`ocamlfind ocamlc(ocamlopt) -package ocaml@p -linkpkg a.ml`
+```
+ocamlfind ocamlc(ocamlopt) -package ocaml_at_p -linkpkg a.ml
+```
 
 ##How to write code
 
@@ -64,27 +66,29 @@ OCamlプログラムのデバッグ出力をサポートするツールです．
 #使用方法
 
 ##インストール方法
-require : OCaml 4.03.0
+必要な OCaml version : OCaml 4.03.0
+
+opam でリリースされています
 
 install
 
 ```
-make install
+opam install ocaml_at_p
 ```
 
 uninstall
 
 ```
-make uninstall
+make remove ocaml_at_p
 ```
-
-TODO : opam release
 
 ##OCaml@pを用いたコンパイル方法
 
 a.mlをOCaml@pでコンパイルするとき
 
-ocamlfind ocamlc -package ocaml@p -linkpkg a.ml
+```
+ocamlfind ocamlc -package ocaml_at_p -linkpkg a.ml
+```
 
 ##コードの記述方法
 

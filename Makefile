@@ -7,8 +7,7 @@ OPT = ocamlopt
 FA = -package compiler-libs.common -linkpkg
 FB = -package typpx,compiler-libs.common -linkpkg
 
-LINK = helper.cmo insert.cmo create.cmo mod.cmo ocaml_at_p.cmo
-OLINK = helper.cmx insert.cmx create.cmx mod.cmx ocaml_at_p.cmx
+LINK = helper.cmx insert.cmx create.cmx mod.cmx ocaml_at_p.cmx
 
 #build
 build: ppshow.cmo ppshow.cmx ocaml_at_p.opt
@@ -21,7 +20,7 @@ ppshow.cmx : ppshow.ml
 
 #ocamlopt
 ocaml_at_p.opt : helper.cmx insert.cmx create.cmx mod.cmx ocaml_at_p.cmx
-	$(FIND) $(OPT) $(FB) -o ocaml_at_p.opt ${OLINK}
+	$(FIND) $(OPT) $(FB) -o ocaml_at_p.opt ${LINK}
 
 helper.cmx : helper.ml
 	$(FIND) $(OPT) $(FA) -c helper.ml
@@ -40,11 +39,11 @@ ocaml_at_p.cmx : ocaml_at_p.ml
 
 #install,uninstall
 install : build
-	-$(FIND) remove ocaml@p
-	$(FIND) install ocaml@p META ocaml_at_p.opt ppshow.cm* ppshow.o
+	-$(FIND) remove ocaml_at_p
+	$(FIND) install ocaml_at_p META ocaml_at_p.opt ppshow.cm* ppshow.o
 
 uninstall:
-	-$(FIND) remove ocaml@p
+	-$(FIND) remove ocaml_at_p
 
 #clean
 clean:
