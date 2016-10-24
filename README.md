@@ -7,6 +7,8 @@ note : The system don't consider use in combination with other PPX tools using a
 #How to use
 
 ##installation
+Version : 1.0
+
 require : OCaml 4.03.0
 
 install
@@ -21,7 +23,7 @@ uninstall
 make uninstall
 ```
 
-TODO : opam release
+OPAM released
 
 ##How to compile with OCaml@p
 
@@ -49,6 +51,14 @@ Then，markers (`[@p x],[@p y],[@p]`) are attached the expression (`x + y`)．Tw
 11			<- [@p]   の出力
 ```
 
+###Marker types
+
+There are two types marker `[@p]` and `[@ps]`.
+
+* `[@p]` - newline after printing
+
+* `[@ps]` - not newline after printing
+
 ###Outer module check [@@@ppopen]
 
 The system cannot be sure to define print function that print a value of datatype defined in other ml files, so it is difficulty for users to understand error messages. Then, users need to write `[@@@ppopen module_name]` in Toplevel of ml file written markers to be clear that the ml files of module are compiled by OCaml@p.
@@ -64,6 +74,8 @@ OCamlプログラムのデバッグ出力をサポートするツールです．
 #使用方法
 
 ##インストール方法
+Version : 1.0
+
 require : OCaml 4.03.0
 
 install
@@ -78,7 +90,7 @@ uninstall
 make uninstall
 ```
 
-TODO : opam release
+OPAM released
 
 ##OCaml@pを用いたコンパイル方法
 
@@ -106,6 +118,14 @@ let a = add 1 10
 10			<- [@p y] の出力
 11			<- [@p]   の出力
 ```
+
+###マーカの種類
+
+マーカは2種類存在する．
+
+* `[@p]` - 出力後に改行
+
+* `[@ps]` - 出力後に改行しない
 
 ###外部モジュールチェック [@@@ppopen]
 

@@ -12,4 +12,4 @@ test.cmx:
 	$(FIND) $(OPT) $(FLAG) -c test.ml
 
 clean:
-	-rm test.opt *.cm* *.o
+	-rm test test.opt *.cm* *.o
