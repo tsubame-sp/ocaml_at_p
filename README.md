@@ -7,9 +7,11 @@ note : The system don't consider use in combination with other PPX tools using a
 #How to use
 
 ##installation
+Version : 1.0.1
+
 required OCaml version : OCaml 4.03.0
 
-opam released
+OPAM released
 
 install
 
@@ -20,7 +22,7 @@ opam install ocaml_at_p
 uninstall
 
 ```
-make remove ocaml_at_p
+opam remove ocaml_at_p
 ```
 
 ##How to compile with OCaml@p
@@ -66,6 +68,8 @@ OCamlプログラムのデバッグ出力をサポートするツールです．
 #使用方法
 
 ##インストール方法
+Version : 1.0.1
+
 必要な OCaml version : OCaml 4.03.0
 
 opam でリリースされています
@@ -79,7 +83,7 @@ opam install ocaml_at_p
 uninstall
 
 ```
-make remove ocaml_at_p
+opam remove ocaml_at_p
 ```
 
 ##OCaml@pを用いたコンパイル方法

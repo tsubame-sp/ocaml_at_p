@@ -1,5 +1,3 @@
-#Makefile for debugprint
-
 #macro define
 FIND = ocamlfind
 OC = ocamlc
@@ -39,10 +37,9 @@ ocaml_at_p.cmx : ocaml_at_p.ml
 
 #install,uninstall
 install : build
-	-$(FIND) remove ocaml_at_p
 	$(FIND) install ocaml_at_p META ocaml_at_p.opt ppshow.cm* ppshow.o
 
-uninstall:
+remove:
 	-$(FIND) remove ocaml_at_p
 
 #clean
