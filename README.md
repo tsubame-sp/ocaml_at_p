@@ -1,8 +1,8 @@
 #OCaml@p : A debugging print system for OCaml
 
-OCaml@p is a tool supporting debug in OCaml programming. When you compile a program by this tool, this system make definition of print function automatically, and insert function call to print expression attached marker [@p] automatically.
+OCaml@p is a tool supporting debug in OCaml programming. When you compile a program by this tool, this tool generates definition of print function automatically, and inserts function calls to print expression attached marker [@p] automatically.
 
-note : The system don't consider use in combination with other PPX tools using attributes.
+note : This tool doesn't consider use in combination with other PPX tools using attributes.
 
 #How to use
 
@@ -53,9 +53,17 @@ Then，markers (`[@p x],[@p y],[@p]`) are attached the expression (`x + y`)．Tw
 11			<- [@p]   の出力
 ```
 
+###Marker types
+
+There are two types marker `[@p]` and `[@ps]`.
+
+* `[@p]` - newline after printing
+
+* `[@ps]` - not newline after printing
+
 ###Outer module check [@@@ppopen]
 
-The system cannot be sure to define print function that print a value of datatype defined in other ml files, so it is difficulty for users to understand error messages. Then, users need to write `[@@@ppopen module_name]` in Toplevel of ml file written markers to be clear that the ml files of module are compiled by OCaml@p.
+This tool cannot be sure to define print function that print a value of datatype defined in other ml files, so it is difficulty for users to understand error messages. Then, users need to write `[@@@ppopen module_name]` in Toplevel of ml file written markers to be clear that the ml files of module are compiled by OCaml@p.
 
 ---
 
@@ -114,6 +122,14 @@ let a = add 1 10
 10			<- [@p y] の出力
 11			<- [@p]   の出力
 ```
+
+###マーカの種類
+
+マーカは2種類存在する．
+
+* `[@p]` - 出力後に改行
+
+* `[@ps]` - 出力後に改行しない
 
 ###外部モジュールチェック [@@@ppopen]
 
