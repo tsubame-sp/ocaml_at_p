@@ -1,35 +1,37 @@
 #OCaml@p : A debugging print system for OCaml
 
-OCaml@p is a tool supporting debug in OCaml programming. When you compile a program by this tool, this system make definition of print function automatically, and insert function call to print expression attached marker [@p] automatically.
+OCaml@p is a tool supporting debug in OCaml programming. When you compile a program by this tool, this tool generates definition of print function automatically, and inserts function calls to print expression attached marker [@p] automatically.
 
-note : The system don't consider use in combination with other PPX tools using attributes.
+note : This tool doesn't consider use in combination with other PPX tools using attributes.
 
 #How to use
 
 ##installation
-Version : 1.0
+Version : 1.0.1
 
-require : OCaml 4.03.0
+required OCaml version : OCaml 4.03.0
+
+OPAM released
 
 install
 
 ```
-make install
+opam install ocaml_at_p
 ```
 
 uninstall
 
 ```
-make uninstall
+opam remove ocaml_at_p
 ```
-
-OPAM released
 
 ##How to compile with OCaml@p
 
 When you compile a.ml with OCaml@p
 
-`ocamlfind ocamlc(ocamlopt) -package ocaml@p -linkpkg a.ml`
+```
+ocamlfind ocamlc(ocamlopt) -package ocaml_at_p -linkpkg a.ml
+```
 
 ##How to write code
 
@@ -61,7 +63,7 @@ There are two types marker `[@p]` and `[@ps]`.
 
 ###Outer module check [@@@ppopen]
 
-The system cannot be sure to define print function that print a value of datatype defined in other ml files, so it is difficulty for users to understand error messages. Then, users need to write `[@@@ppopen module_name]` in Toplevel of ml file written markers to be clear that the ml files of module are compiled by OCaml@p.
+This tool cannot be sure to define print function that print a value of datatype defined in other ml files, so it is difficulty for users to understand error messages. Then, users need to write `[@@@ppopen module_name]` in Toplevel of ml file written markers to be clear that the ml files of module are compiled by OCaml@p.
 
 ---
 
@@ -74,29 +76,31 @@ OCamlプログラムのデバッグ出力をサポートするツールです．
 #使用方法
 
 ##インストール方法
-Version : 1.0
+Version : 1.0.1
 
-require : OCaml 4.03.0
+必要な OCaml version : OCaml 4.03.0
+
+opam でリリースされています
 
 install
 
 ```
-make install
+opam install ocaml_at_p
 ```
 
 uninstall
 
 ```
-make uninstall
+opam remove ocaml_at_p
 ```
-
-OPAM released
 
 ##OCaml@pを用いたコンパイル方法
 
 a.mlをOCaml@pでコンパイルするとき
 
-ocamlfind ocamlc -package ocaml@p -linkpkg a.ml
+```
+ocamlfind ocamlc -package ocaml_at_p -linkpkg a.ml
+```
 
 ##コードの記述方法
 
