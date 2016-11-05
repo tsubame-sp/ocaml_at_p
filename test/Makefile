@@ -1,7 +1,7 @@
 FIND = ocamlfind
 OC = ocamlc
 OPT = ocamlopt
-FLAG = -package ocaml@p -linkpkg
+FLAG = -package ocaml_at_p -linkpkg
 
 all: mylist.cmo test.cmo
 	$(FIND) $(OC) $(FLAG) -o test mylist.cmo test.cmo
