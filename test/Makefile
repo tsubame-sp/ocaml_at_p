@@ -12,13 +12,13 @@ opt: mylist.cmx test.cmx
 mylist.cmo: mylist.ml
 	$(FIND) $(OC) $(FLAG) -c mylist.ml
 
-test.cmo: mylist.ml
+test.cmo: test.ml
 	$(FIND) $(OC) $(FLAG) -c test.ml
 
 mylist.cmx: mylist.ml
 	$(FIND) $(OPT) $(FLAG) -c mylist.ml
 
-test.cmx: mylist.ml
+test.cmx: test.ml
 	$(FIND) $(OPT) $(FLAG) -c test.ml
 
 clean:
