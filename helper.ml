@@ -347,6 +347,25 @@ let rec select_pp typ =
         make_Texp_apply (make_Texp_ident (path_ident_create "_pp__variant"))
                         [Nolabel,Some (make_Texp_function case_list)]
     in
+    let rec from_tfields ty =
+        match ty.desc with
+        | Tnil -> make_Texp_construct (Lident "[]") []
+        | Tfield (name,_,mty,rest) ->
+                let ty_s = Format.asprintf "%a" Printtyp.type_expr mty in
+                make_Texp_construct
+                    (Lident "::")
+                    [make_Texp_tuple
+                         [make_Texp_constant (Const_string (name,None));
+                          make_Texp_apply
+                              (make_Texp_apply
+                                   (make_Texp_ident (path_ident_create "!%"))
+                                   [Nolabel,Some (make_Texp_apply
+                                                      (make_Texp_ident (path_ident_create "_pp__dump"))
+                                                      [Nolabel,Some (make_Texp_constant (Const_string (ty_s,None)))])])
+                              [Nolabel,Some (make_Texp_construct (Lident "()") [])]];
+                     from_tfields rest]
+        | _ -> failwith "from_tfields"
+    in
     match typ.desc with
     | Tvar None -> 
             make_Texp_ident (path_ident_create "_pp__unsup") ~typ:typ
@@ -397,7 +416,19 @@ let rec select_pp typ =
                                                             (Const_string ("< Unsupported Type > : You may not compiled "^m^".ml by ocaml@p or may not write [@@@ppopen]",None)))]
                     
             end
-    | Tobject _ -> failwith "TODO: support Tobject (type of object)"
+    | Tobject (ty,ref) ->
+            begin match !ref with
+            | Some _ -> failwith "TODO: support Tobject (_,Some ...)"
+            | None -> 
+                    let expression = from_tfields ty in
+                    let case_list =
+                        [{ c_lhs = make_Tpat_any;
+                           c_guard = None;
+                           c_rhs = expression }]
+                    in
+                    make_Texp_apply (make_Texp_ident (path_ident_create "_pp__object"))
+                                    [Nolabel,Some (make_Texp_function case_list)]
+            end
     | Tfield _ -> failwith "TODO: support Tfield (?)"
     | Tnil ->
             make_Texp_ident (path_ident_create "_pp__nouse") ~typ:typ
