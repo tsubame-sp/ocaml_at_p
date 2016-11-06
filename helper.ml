@@ -397,15 +397,15 @@ let rec select_pp typ =
                                                             (Const_string ("< Unsupported Type > : You may not compiled "^m^".ml by ocaml@p or may not write [@@@ppopen]",None)))]
                     
             end
-    | Tobject _ -> failwith "Tobject"
-    | Tfield _ -> failwith "Tfield"
+    | Tobject _ -> failwith "TODO: support Tobject (type of object)"
+    | Tfield _ -> failwith "TODO: support Tfield (?)"
     | Tnil ->
             make_Texp_ident (path_ident_create "_pp__nouse") ~typ:typ
     | Tlink ty -> select_pp ty
-    | Tsubst _ -> failwith "Tsubst"
+    | Tsubst _ -> failwith "TODO: support Tsubst (?)"
     | Tvariant row_desc ->
             from_row_desc row_desc
-    | Tunivar _ -> failwith "Tunivar"
+    | Tunivar _ -> failwith "TODO: support Tunivar (?)"
     | Tpoly (ty,_) ->
             (*
             Printtyp.type_expr Format.std_formatter typ;
@@ -413,7 +413,7 @@ let rec select_pp typ =
             *)
             select_pp ty
             (* TODO : これでいいのかわからない *)
-    | Tpackage _ -> failwith "Tpackage"
+    | Tpackage _ -> failwith "TODO: support Tpackage (?)"
 
 (* select pp from core_type *)
 and select_pp_core {ctyp_type = type_expr;_} = select_pp type_expr
