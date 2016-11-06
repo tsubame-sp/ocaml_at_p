@@ -3,10 +3,10 @@ open Typedtree
 open Helper
 open Longident
 
-(* _this_ expression *)
+(* _this expression *)
 let expr_this typ =
-    { exp_desc = Texp_ident (Path.Pident (Ident.create "_this_"),
-                             {txt = Lident "_this_";loc = Location.none},
+    { exp_desc = Texp_ident (Path.Pident (Ident.create "_this"),
+                             {txt = Lident "_this";loc = Location.none},
                              {Types.val_type = typ;
                               Types.val_kind=Types.Val_reg;
                               Types.val_loc=Location.none;

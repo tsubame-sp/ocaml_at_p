@@ -19,17 +19,25 @@ module MapArg : TypedtreeMap.MapArgument = struct
      * expression mapper 
      * *)
     let enter_expression expr =
+        let this_i = Ident.create "_this" in
+        let value_d =
+            Types.{ val_type = expr.exp_type;
+                    val_kind = Val_reg;
+                    val_loc = Location.none;
+                    val_attributes = []
+                  }
+        in
         let rec pickup_attr = function
             | [] -> expr_this expr.exp_type
             (* print argument with newline *)
             | ({txt = "p";_},Parsetree.PStr [{Parsetree.pstr_desc=Parsetree.Pstr_eval (print_ast_expr,_);_}])::xs -> 
-                    insert_pp (pickup_attr xs) (Typecore.type_expression expr.exp_env print_ast_expr) true
+                    insert_pp (pickup_attr xs) (Typecore.type_expression Env.(add_value this_i value_d expr.exp_env) print_ast_expr) true
             (* print expression with newline *)
             | ({txt = "p";_},Parsetree.PStr [])::xs ->
                     insert_pp (pickup_attr xs) (expr_this expr.exp_type) true
             (* print argument *)
             | ({txt = "ps";_},Parsetree.PStr [{Parsetree.pstr_desc=Parsetree.Pstr_eval (print_ast_expr,_);_}])::xs -> 
-                    insert_pp (pickup_attr xs) (Typecore.type_expression expr.exp_env print_ast_expr) false
+                    insert_pp (pickup_attr xs) (Typecore.type_expression Env.(add_value this_i value_d expr.exp_env) print_ast_expr) false
             (* print expression *)
             | ({txt = "ps";_},Parsetree.PStr [])::xs ->
                     insert_pp (pickup_attr xs) (expr_this expr.exp_type) false
@@ -40,7 +48,7 @@ module MapArg : TypedtreeMap.MapArgument = struct
             { exp_desc = 
                 Texp_let 
                     (Nonrecursive,
-                     [{  vb_pat = {  pat_desc = Tpat_var (Ident.create "_this_",{txt = "_this_";loc = Location.none});
+                     [{  vb_pat = {  pat_desc = Tpat_var (Ident.create "_this",{txt = "_this";loc = Location.none});
                                      pat_loc = Location.none;
                                      pat_extra = [];
                                      pat_type = expr.exp_type;
