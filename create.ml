@@ -296,7 +296,9 @@ let make_pp_class_set class_decl_list ret =
                 from_list acc xs
     in
     let vb_list = from_list [] class_decl_list in
-    (make_Tstr_val vb_list) :: ret
+    if vb_list = []
+    then ret
+    else (make_Tstr_val vb_list) :: ret
 
 let make_pp_sig_class_set class_desc_list ret =
     let rec from_list acc = function
