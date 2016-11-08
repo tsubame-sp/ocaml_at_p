@@ -40,7 +40,7 @@ ocamlfind ocamlc(ocamlopt) -package ocaml_at_p -linkpkg a.ml
 In OCaml@p, when you write marker [@p] behind expression that you want to print the return value, so you can print. The marker [@p] is attribute syntax in OCaml.
 
 ```
-let add x y = x + y [@p x] [@p y] [@p]
+let add x y = x + y [@p x] [@p y] [@p] [@p _this+100]
 
 let a = add 1 10
 ```
@@ -48,9 +48,10 @@ let a = add 1 10
 Then，markers (`[@p x],[@p y],[@p]`) are attached the expression (`x + y`)．Two marker `[@p x]` and `[@p y]` are used to print values of expressions `x` and `y` ，and the marker `[@p]` is the value of the expression `x + y`．The following is result of run the program.
 
 ```
-1 			<- [@p x] の出力
-10			<- [@p y] の出力
-11			<- [@p]   の出力
+1 			<- [@p x]         の出力
+10			<- [@p y]         の出力
+11			<- [@p]           の出力
+111         <- [@p _this+100] の出力
 ```
 
 ###Marker types

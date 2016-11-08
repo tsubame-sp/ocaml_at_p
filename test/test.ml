@@ -63,6 +63,7 @@ and ['a] c2 = object(self)
 end
 
 let _ = 1 [@p]
+let _ = 1 [@p _this + 10]
 let _ = 3.14 [@p]
 let _ = 'A' [@p]
 let _ = true [@p]
