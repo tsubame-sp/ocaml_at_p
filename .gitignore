@@ -9,7 +9,7 @@
 *.cmxa
 
 memo.txt
-ocaml@p
+ocaml_at_p.opt
 
 
 # ocamlbuild working directory

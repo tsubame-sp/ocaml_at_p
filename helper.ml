@@ -1,3 +1,8 @@
+module SSet = Set.Make(struct
+    type t = string
+    let compare = compare
+end)
+
 open Asttypes
 open Format
 open Types
@@ -6,7 +11,7 @@ open Longident
 open Ident
 
 (* ppopen check *)
-let ppopen = ref []
+let ppopen = ref (SSet.empty)
 
 (*
  * Types
@@ -394,7 +399,7 @@ let rec select_pp typ =
             | "Pervasives.open_flag" -> 
                     make_Texp_ident (path_ident_create ("_pp_"^Path.last path)) ~typ:typ
             | _ ->  let m = first (path_to_longident path) in
-                    if List.mem m !ppopen 
+                    if SSet.mem m !ppopen
                     then make_Texp_ident (path_set path) ~typ:typ
                     else make_Texp_apply (make_Texp_ident (path_ident_create "_pp__dump") ~typ:typ)
                                          [Nolabel,Some (make_Texp_constant 
@@ -409,7 +414,7 @@ let rec select_pp typ =
             | "Pervasives.ref" -> 
                     make_Texp_apply (make_Texp_ident (path_ident_create ("_pp_"^Path.last path)) ~typ:typ) (typelist_to_arglist typelist)
             | _ ->  let m = first (path_to_longident path) in
-                    if List.mem m !ppopen 
+                    if SSet.mem m !ppopen 
                     then make_Texp_apply (make_Texp_ident (path_set path) ~typ:typ) (typelist_to_arglist typelist)
                     else make_Texp_apply (make_Texp_ident (path_ident_create "_pp__dump") ~typ:typ)
                                          [Nolabel,Some (make_Texp_constant 

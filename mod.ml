@@ -105,11 +105,11 @@ module MapArg : TypedtreeMap.MapArgument = struct
                    ({txt="ppopen";_},
                     Parsetree.PStr ([{Parsetree.pstr_desc = Parsetree.Pstr_eval ({Parsetree.pexp_desc=Parsetree.Pexp_construct ({txt = Lident name;_},_);_},_);_}])
                    )}::xs ->
-                       ppopen := name :: !ppopen;
+                       ppopen := SSet.add name !ppopen;
                        select_str_item acc xs
             (* module ppopen *)
             | ({str_desc = Tstr_module ({mb_name = {txt=name;_}; mb_expr = me;_} as mb);_} as str_item)::xs ->
-                    ppopen := name :: !ppopen;
+                    ppopen := SSet.add name !ppopen;
                     select_str_item ({str_item with str_desc = Tstr_module {mb with mb_expr = enter_module_expr me}} :: acc) xs
             | x::xs ->  select_str_item ((enter_structure_item x)::acc) xs
         in
@@ -148,6 +148,21 @@ module MapArg : TypedtreeMap.MapArgument = struct
                     str_env = Env.empty}
         in
         { structure with str_items = str :: structure.str_items }
+
+    (*
+     * module_expr
+     *)
+    let rec enter_module_expr module_expr =
+        match module_expr.mod_desc with
+        | Tmod_functor (id,a,b,me) ->
+                let name = Ident.name id in
+                (ppopen := SSet.add name !ppopen;
+                 (let ret = enter_module_expr me in
+                  (*ppopen := SSet.remove name !ppopen;*)
+                  {module_expr with mod_desc = Tmod_functor (id,a,b,ret)}))
+        | Tmod_apply (m1,m2,mc) ->
+                {module_expr with mod_desc = Tmod_apply (enter_module_expr m1,enter_module_expr m2,mc)}
+        | _ -> leave_module_expr module_expr
 end
 
 module Map = TypedtreeMap.MakeMap(MapArg)

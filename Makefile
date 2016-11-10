@@ -2,8 +2,8 @@
 FIND = ocamlfind
 OC = ocamlc
 OPT = ocamlopt
-FA = -package compiler-libs.common -linkpkg
-FB = -package typpx,compiler-libs.common -linkpkg
+FA = -package compiler-libs -linkpkg
+FB = -package typpx,compiler-libs -linkpkg
 
 LINK = helper.cmx insert.cmx create.cmx mod.cmx ocaml_at_p.cmx
 
