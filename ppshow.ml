@@ -43,48 +43,48 @@ let _pp_array _pp_a prf xs =
         fprintf prf "|]@]"
 
 (* string_of *)
-let _strbuf = Buffer.create 1024
+let strbuf = Buffer.create 1024
 
-let _s_of _pp_a a = 
-    let prf = formatter_of_buffer _strbuf in
+let s_of _pp_a a = 
+    let prf = formatter_of_buffer strbuf in
     _pp_a prf a; pp_print_flush prf ();
-    let str = Buffer.contents _strbuf in 
-    Buffer.clear _strbuf;
+    let str = Buffer.contents strbuf in 
+    Buffer.clear strbuf;
     str
 
-(* _pp_poly *)
-type _pp_poly = { _pp_poly : 'b. 'b _pp_neg -> 'b }
-and 'b _pp_neg = { _pp_neg : 'a. (formatter -> 'a -> unit) -> 'a -> 'b }
-let _pp_poly _pp_a x = { _pp_poly = fun k -> k._pp_neg _pp_a x }
-let _apply__pp_poly prf p = p._pp_poly { _pp_neg = fun _pp_a -> _pp_a prf }
+(* pp_poly *)
+type pp_poly = { pp_poly : 'b. 'b pp_neg -> 'b }
+and 'b pp_neg = { pp_neg : 'a. (formatter -> 'a -> unit) -> 'a -> 'b }
+let pp_poly _pp_a x = { pp_poly = fun k -> k.pp_neg _pp_a x }
+let apply_pp_poly prf p = p.pp_poly { pp_neg = fun _pp_a -> _pp_a prf }
 
-(* prefix operator for _pp_poly *)
-let (!%) _pp_a = _pp_poly _pp_a
+(* prefix operator for pp_poly *)
+let (!%) _pp_a = pp_poly _pp_a
 
-let rec _string_forall p str i j =
-    j < i || p str.[i] && _string_forall p str (i+1) j
+let rec string_forall p str i j =
+    j < i || p str.[i] && string_forall p str (i+1) j
 
 (* PP for Heterogeneous list *)
-let _pp_poly_list prf = function
+let pp_poly_list prf = function
     | [] -> ()
     | [p] ->
-            let s = _s_of _apply__pp_poly p in
+            let s = s_of apply_pp_poly p in
             if s = "" then ()
             else
                 let is_atom = match s.[0] with
                 | '(' | '[' | '{' | '<' | '"' | '\'' -> true
-                | _ -> _string_forall ( function
+                | _ -> string_forall ( function
                     | '0'..'9' | 'A'..'Z' | '_' | 'a'..'z' -> true
                     | _ -> false ) s 1 (String.length s - 1) in
-                if is_atom then fprintf prf " %a" _apply__pp_poly p
-                else fprintf prf "(%a)" _apply__pp_poly p
+                if is_atom then fprintf prf " %a" apply_pp_poly p
+                else fprintf prf "(%a)" apply_pp_poly p
     | p::ps ->
-            fprintf prf "@[<1>(%a" _apply__pp_poly p;
-            List.iter (fprintf prf ",@;%a" _apply__pp_poly) ps;
+            fprintf prf "@[<1>(%a" apply_pp_poly p;
+            List.iter (fprintf prf ",@;%a" apply_pp_poly) ps;
             fprintf prf ")@]"
 
 (* tuple *)
-let _pp_tuple (make_pps : 'a -> _pp_poly list) prf x = _pp_poly_list prf (make_pps x)
+let _pp_tuple (make_pps : 'a -> pp_poly list) prf x = pp_poly_list prf (make_pps x)
 
 let _pp__tuple2 _pp_a _pp_b prf x =
     _pp_tuple (fun (a,b) -> [ !%_pp_a a; !%_pp_b b ]) prf x
@@ -106,17 +106,17 @@ let _pp__tuple7 _pp_a _pp_b _pp_c _pp_d _pp_e _pp_f _pp_g prf x =
 
 
  (* variant *)
-let _pp__variant (make_cps : 'a -> string * _pp_poly list) prf x =
+let _pp__variant (make_cps : 'a -> string * pp_poly list) prf x =
     let constr_name, ps = make_cps x in
-    fprintf prf "%s%a" constr_name _pp_poly_list ps
+    fprintf prf "%s%a" constr_name pp_poly_list ps
 
 (*
-type _pp_poly_variant_cps = PPConstr of string * _pp_poly list | PPKnown of _pp_poly
+type pp_poly_variant_cps = PPConstr of string * pp_poly list | PPKnown of pp_poly
 
-let _pp_poly_variant (make_cps : 'a -> _pp_poly_variant_cps) prf x =
+let pp_poly_variant (make_cps : 'a -> pp_poly_variant_cps) prf x =
     match make_cps x with
       | PPConstr (c,ps) -> _pp_variant (fun () -> (c,ps)) prf ()
-      | PPKnown p       -> _apply__pp_poly prf p
+      | PPKnown p       -> apply_pp_poly prf p
 *)
 
 (* PP for option *)
@@ -127,8 +127,8 @@ let _pp_option _pp_a prf a =
     ) prf a
 
 (* PP for records and objects *)
-let _pp_recobj encL encC encR (make__pp_fields : 'a -> (string * _pp_poly) list) prf x =
-    let apply__pp_field prf (f,p) = fprintf prf "@[<2>%s %s @,%a@]" f encC _apply__pp_poly p in 
+let _pp_recobj encL encC encR (make__pp_fields : 'a -> (string * pp_poly) list) prf x =
+    let apply__pp_field prf (f,p) = fprintf prf "@[<2>%s %s @,%a@]" f encC apply_pp_poly p in 
     fprintf prf "@[<1>%s" encL;
     begin match make__pp_fields x with
       | [] -> ()
