@@ -240,6 +240,17 @@ let make_Texp_function case_list =
       exp_attributes = []
     }
 
+(* Texp_sequence creator *)
+let make_Texp_sequence e1 e2 =
+    { exp_desc = 
+        Texp_sequence (e1,e2);
+      exp_loc = Location.none;
+      exp_extra = [];
+      exp_type = type_none;
+      exp_env = Env.empty;
+      exp_attributes = []
+    }
+
 (*
  * core_type
  * *)
@@ -491,3 +502,8 @@ let make_vb ty_name exp =
      vb_expr = exp;
      vb_attributes = [];
      vb_loc = Location.none}
+
+(* insert_pp_for_pattern *)
+let rec insert_pp_for_pattern (pat : pattern) : expression =
+    (* TODO *)
+    expr_std_formatter (* this is temporary value *)

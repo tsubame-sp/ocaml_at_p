@@ -50,32 +50,6 @@ let fun_exp exp ls =
     in
     loop app_prfx (List.rev (List.map fst ls))
 
-(*
- * prepare for variant pp
- *)
-(*
-(* create constructor argument *)
-let pat_list n =
-    let rec loop acc = function
-        | 0 -> acc
-        | n -> loop (make_Tpat_var ("_p"^string_of_int n)::acc) (n-1)
-    in
-    loop [] n
-
-(* create cps *)
-let rec make_cps_expr n = function
-    | [] -> make_Texp_construct (Lident "[]") []
-    | x::xs ->
-            make_Texp_construct
-                (Lident "::")
-                [(make_Texp_apply
-                     (make_Texp_apply
-                         (make_Texp_ident (path_ident_create "!%"))
-                         [Nolabel,Some (select_pp_core x)])
-                     [Nolabel,Some (make_Texp_ident (path_ident_create ("_p"^string_of_int n)))]);
-                 make_cps_expr (n+1) xs]
-*)
-
 (* 
  * make pp for variant 
  * *)
@@ -126,23 +100,6 @@ let make_record_expr label_decl_list =
     in
     make_Texp_apply (make_Texp_ident (path_ident_create "_pp__record"))
                     [Nolabel,Some (make_Texp_function case_list)]
-
-(*
-(* create value_binding for pp *)
-let make_vb ty_name exp =
-    {vb_pat = 
-        {pat_desc = Tpat_var ({stamp=0;name="_pp_"^ty_name;flags=0},
-                              {txt="_pp_"^ty_name;loc=Location.none});
-         pat_loc = Location.none;
-         pat_extra = [];
-         pat_type = type_none;
-         pat_env = Env.empty;
-         pat_attributes = []
-        };
-     vb_expr = exp;
-     vb_attributes = [];
-     vb_loc = Location.none}
-*)
 
 (* type_declaration to pp
  *

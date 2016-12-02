@@ -20,31 +20,31 @@ module MapArg : TypedtreeMap.MapArgument = struct
      * *)
     let enter_expression expr =
         let this_i = Ident.create "_this" in
-        let value_d =
+        let value_d expr =
             Types.{ val_type = expr.exp_type;
                     val_kind = Val_reg;
                     val_loc = Location.none;
                     val_attributes = []
                   }
         in
-        let rec pickup_attr = function
+        let rec pickup_attr expr = function
             | [] -> expr_this expr.exp_type
             (* print argument with newline *)
             | ({txt = "p";_},Parsetree.PStr [{Parsetree.pstr_desc=Parsetree.Pstr_eval (print_ast_expr,_);_}])::xs -> 
-                    insert_pp (pickup_attr xs) (Typecore.type_expression Env.(add_value this_i value_d expr.exp_env) print_ast_expr) true
+                    insert_pp (pickup_attr expr xs) (Typecore.type_expression Env.(add_value this_i (value_d expr) expr.exp_env) print_ast_expr) true
             (* print expression with newline *)
             | ({txt = "p";_},Parsetree.PStr [])::xs ->
-                    insert_pp (pickup_attr xs) (expr_this expr.exp_type) true
+                    insert_pp (pickup_attr expr xs) (expr_this expr.exp_type) true
             (* print argument *)
             | ({txt = "ps";_},Parsetree.PStr [{Parsetree.pstr_desc=Parsetree.Pstr_eval (print_ast_expr,_);_}])::xs -> 
-                    insert_pp (pickup_attr xs) (Typecore.type_expression Env.(add_value this_i value_d expr.exp_env) print_ast_expr) false
+                    insert_pp (pickup_attr expr xs) (Typecore.type_expression Env.(add_value this_i (value_d expr) expr.exp_env) print_ast_expr) false
             (* print expression *)
             | ({txt = "ps";_},Parsetree.PStr [])::xs ->
-                    insert_pp (pickup_attr xs) (expr_this expr.exp_type) false
+                    insert_pp (pickup_attr expr xs) (expr_this expr.exp_type) false
             (* other attributes *)
-            | _::xs -> pickup_attr xs
+            | _::xs -> pickup_attr expr xs
         in
-        let mk_exp attr extra =
+        let mk_exp attr extra expr =
             { exp_desc = 
                 Texp_let 
                     (Nonrecursive,
@@ -59,7 +59,7 @@ module MapArg : TypedtreeMap.MapArgument = struct
                          vb_attributes = [];
                          vb_loc = Location.none;
                       }],
-                     pickup_attr attr);
+                     pickup_attr expr attr);
               exp_loc = Location.none;
               exp_extra = [];
               exp_type = expr.exp_type;
@@ -77,12 +77,45 @@ module MapArg : TypedtreeMap.MapArgument = struct
             in
             loop [] [] ls
         in
-        let (extra_attr,extra) = check_extra expr.exp_extra in
-        if List.length expr.exp_attributes = 0
-        then if List.length extra_attr = 0
-             then expr
-             else mk_exp extra_attr extra
-        else mk_exp (expr.exp_attributes @ extra_attr) extra
+        let rec check_attr = function
+            | [] -> false
+            | ({txt="p";_},_)::xs -> true
+            | _::xs -> check_attr xs
+        in
+        let rec attr_cut acc = function
+            | [] -> List.rev acc
+            | ({txt="p";_},_)::xs -> attr_cut acc xs
+            | x::xs -> attr_cut (x::acc) xs
+        in
+        let rec check_pat a1 a2 = function
+            | [] -> (List.rev a1,List.rev a2)
+            | ({vb_pat=pat;vb_expr=e;_} as vb)::xs ->
+                    let p = {pat with pat_attributes = (attr_cut [] pat.pat_attributes)} in
+                    if check_attr pat.pat_attributes
+                    then check_pat (pat :: a1) ({vb with vb_pat = p} :: a2) xs
+                    else check_pat a1 (vb :: a2) xs
+        in
+        let insert_expr expr pl =
+            let rec sub = function
+                | [] -> expr
+                | x::xs -> make_Texp_sequence (insert_pp_for_pattern x) (sub xs)
+            in
+            sub pl
+        in
+        let pat_checked_expr =
+            match expr.exp_desc with
+            | Texp_let (f,vblist,e) ->
+                    let (pl,new_vblist) = check_pat [] [] vblist in
+                    { expr with exp_desc = Texp_let (f,new_vblist,insert_expr e pl) }
+            | _ ->  expr
+        in
+        let (extra_attr,extra) = check_extra pat_checked_expr.exp_extra in
+        if List.length pat_checked_expr.exp_attributes = 0
+        then 
+           (if List.length extra_attr = 0
+            then pat_checked_expr
+            else mk_exp extra_attr extra pat_checked_expr)
+        else mk_exp (expr.exp_attributes @ extra_attr) extra pat_checked_expr
 
     (* 
      * structure_item mapper 
