@@ -453,7 +453,7 @@ let rec select_pp typ =
             end
     | Tobject (ty,ref) ->
             begin match !ref with
-            | Some _ -> failwith "TODO: support Tobject (_,Some ...)"
+            | Some _ -> failwith "TODO: Tobject (_,Some ...)"
             | None -> 
                     let expression = from_tfields ty in
                     let case_list =
@@ -464,22 +464,18 @@ let rec select_pp typ =
                     make_Texp_apply (make_Texp_ident (path_ident_create "_pp__object"))
                                     [Nolabel,Some (make_Texp_function case_list)]
             end
-    | Tfield _ -> failwith "TODO: support Tfield (?)"
+    | Tfield _ -> failwith "TODO: Tfield (?)"
     | Tnil ->
             make_Texp_ident (path_ident_create "_pp__nouse") ~typ:typ
     | Tlink ty -> select_pp ty
-    | Tsubst _ -> failwith "TODO: support Tsubst (?)"
+    | Tsubst _ -> failwith "TODO: Tsubst (?)"
     | Tvariant row_desc ->
             from_row_desc row_desc
-    | Tunivar _ -> failwith "TODO: support Tunivar (?)"
+    | Tunivar _ -> failwith "TODO: Tunivar (?)"
     | Tpoly (ty,_) ->
-            (*
-            Printtyp.type_expr Format.std_formatter typ;
-            failwith "Tpoly"
-            *)
             select_pp ty
             (* TODO : これでいいのかわからない *)
-    | Tpackage _ -> failwith "TODO: support Tpackage (?)"
+    | Tpackage _ -> failwith "TODO: Tpackage (?)"
 
 (* select pp from core_type *)
 and select_pp_core {ctyp_type = type_expr;_} = select_pp type_expr
@@ -521,8 +517,3 @@ let make_vb ty_name exp =
      vb_expr = exp;
      vb_attributes = [];
      vb_loc = Location.none}
-
-(* insert_pp_for_pattern *)
-let rec insert_pp_for_pattern (pat : pattern) : expression =
-    (* TODO *)
-    expr_std_formatter (* this is temporary value *)

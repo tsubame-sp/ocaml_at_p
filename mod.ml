@@ -6,12 +6,6 @@ open Insert
 open Create
 open Longident
 
-let pe s = pp_print_string std_formatter s;
-           pp_print_newline std_formatter ()
-let ps = pp_print_string std_formatter
-let pn = pp_print_newline std_formatter
-let pi = pp_print_int std_formatter
-
 module MapArg : TypedtreeMap.MapArgument = struct
     include TypedtreeMap.DefaultMapArgument
 

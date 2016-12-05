@@ -10,7 +10,7 @@ let caselist_tbl = Hashtbl.create 10
 let get_name ct =
     match ct.ctyp_desc with
     | Ttyp_var s -> s
-    | _ -> failwith "get_name is broken!"
+    | _ -> failwith "TODO"
 
 (* fun _pp_1 -> ... -> expr : expression -> (core_type * variance) list -> expression *)
 let fun_exp exp ls =
@@ -64,7 +64,7 @@ let make_variant_expr const_decl_list =
                                   [make_Texp_constant (Const_string (name,None));
                                    make_cps_expr 1 core_type_list]} :: acc)
                     xs
-        | _::xs -> failwith "I don't know!"
+        | _::xs -> failwith "TODO"
     in
     let case_list = make_caselist_from_cdlist [] const_decl_list
     in
@@ -205,13 +205,13 @@ let from_classfields class_fields =
                               [Nolabel,Some (make_Texp_construct (Lident "()") [])]];
                      make_pp_fields xs]
         | { cf_desc = Tcf_constraint _;_ }::xs ->
-                print_endline "I don't know Tcf_constraint";
+                print_endline "TODO";
                 make_pp_fields xs
         | { cf_desc = Tcf_initializer _;_ }::xs ->
-                print_endline "I don't know Tcf_initializer";
+                print_endline "TODO";
                 make_pp_fields xs
         | { cf_desc = Tcf_attribute _;_ }::xs ->
-                print_endline "I don't know Tcf_attribute";
+                print_endline "TODO";
                 make_pp_fields xs
         | _::xs ->
                 make_pp_fields xs

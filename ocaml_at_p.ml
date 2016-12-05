@@ -1,5 +1,5 @@
 module Main = Typpx.Make.F(struct
-  let tool_name = "ocaml@p"
+  let tool_name = "ocaml_at_p"
   let args = []
   let firstUntypedTransformation = Typpx.Default.untyped_identity
   module Typemod = Typpx.Default.Typemod
