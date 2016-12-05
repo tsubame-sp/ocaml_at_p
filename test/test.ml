@@ -142,3 +142,15 @@ let _ = new c [@p]
 let cn = new c2
 let _ = cn [@p]
 let _ = let _ = cn#add 1 in cn [@p]
+
+let _ =
+    let x [@p] = 10 in
+    let (a,b) [@p] = (1,'A') in
+    let [l1;l2;l3] [@p] = [1;2;3] in
+    let y::ys [@p] = [1;2;3] in
+    let {a=a_elm;b=b_elm} [@p] = {a=[10];b=(2e5,"2e^5")} in
+    let Some e [@p] = Some 10 in
+    let `Some e2 [@p] = `Some 20 in
+    let ((a,10)|(a,20)) [@p] = (10,10) in
+    Format.(pp_print_string std_formatter "DONE.")
+

@@ -77,24 +77,35 @@ module MapArg : TypedtreeMap.MapArgument = struct
             in
             loop [] [] ls
         in
-        let rec check_attr = function
-            | [] -> false
-            | ({txt="p";_},_)::xs -> true
-            | _::xs -> check_attr xs
+        (* 
+         * let式のpatternへのマーカ検出
+         * 
+         * 1つ以上あると1回だけ出力
+         *)
+        let rec check_attr a1 a2 = function
+            | [] -> (a1,List.rev a2)
+            | ({txt="p";_},_)::xs -> check_attr true a2 xs
+            | x::xs -> check_attr a1 (x::a2) xs
         in
-        let rec attr_cut acc = function
+        let rec check_pat acc = function
             | [] -> List.rev acc
-            | ({txt="p";_},_)::xs -> attr_cut acc xs
-            | x::xs -> attr_cut (x::acc) xs
-        in
-        let rec check_pat a1 a2 = function
-            | [] -> (List.rev a1,List.rev a2)
             | ({vb_pat=pat;vb_expr=e;_} as vb)::xs ->
-                    let p = {pat with pat_attributes = (attr_cut [] pat.pat_attributes)} in
-                    if check_attr pat.pat_attributes
-                    then check_pat (pat :: a1) ({vb with vb_pat = p} :: a2) xs
-                    else check_pat a1 (vb :: a2) xs
+                    let (check,cut) = check_attr false [] pat.pat_attributes in
+                    if check
+                    then
+                        let p = {pat with pat_attributes = cut} in
+                        let pat_str = (Format.asprintf "%a" Pprintast.pattern (Untypeast.(default_mapper.pat default_mapper p))) ^ " = " in
+                        let ms = ({txt="ps";loc=Location.none},
+                                  Parsetree.PStr [Ast_helper.(Str.eval (Exp.constant (Parsetree.Pconst_string (pat_str,None))))]) in
+                        let mp = ({txt="p";loc=Location.none},Parsetree.PStr []) in
+                        let new_vb = 
+                            {vb with vb_pat = p;
+                                     vb_expr = 
+                                         {e with exp_attributes = ms :: mp :: e.exp_attributes}} in
+                        check_pat (new_vb :: acc) xs
+                    else check_pat (vb :: acc) xs
         in
+        (*
         let insert_expr expr pl =
             let rec sub = function
                 | [] -> expr
@@ -102,11 +113,12 @@ module MapArg : TypedtreeMap.MapArgument = struct
             in
             sub pl
         in
+        *)
         let pat_checked_expr =
             match expr.exp_desc with
             | Texp_let (f,vblist,e) ->
-                    let (pl,new_vblist) = check_pat [] [] vblist in
-                    { expr with exp_desc = Texp_let (f,new_vblist,insert_expr e pl) }
+                    let new_vblist = check_pat [] vblist in
+                    { expr with exp_desc = Texp_let (f,new_vblist,e) }
             | _ ->  expr
         in
         let (extra_attr,extra) = check_extra pat_checked_expr.exp_extra in
@@ -136,7 +148,8 @@ module MapArg : TypedtreeMap.MapArgument = struct
             | {str_desc = 
                 Tstr_attribute
                    ({txt="ppopen";_},
-                    Parsetree.PStr ([{Parsetree.pstr_desc = Parsetree.Pstr_eval ({Parsetree.pexp_desc=Parsetree.Pexp_construct ({txt = Lident name;_},_);_},_);_}])
+                    Parsetree.PStr ([{Parsetree.pstr_desc = 
+                        Parsetree.Pstr_eval ({Parsetree.pexp_desc=Parsetree.Pexp_construct ({txt = Lident name;_},_);_},_);_}])
                    )}::xs ->
                        ppopen := SSet.add name !ppopen;
                        select_str_item acc xs

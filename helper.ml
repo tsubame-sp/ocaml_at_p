@@ -356,8 +356,27 @@ let rec select_pp typ =
                                                         ctyp_loc = Location.none;
                                                         ctyp_attributes = []}]]} :: acc)
                        xs
-            | _::xs -> 
-                    failwith "I don't know Tvariant this pattern"
+            | (cons,Reither (b1,tyl,b2,_))::xs ->
+                    let rec make_tyl acc = function
+                        | [] -> List.rev acc
+                        | x::xs -> 
+                                make_tyl
+                                  ({ctyp_desc = Ttyp_any;
+                                    ctyp_type = x;
+                                    ctyp_env  = Env.empty;
+                                    ctyp_loc = Location.none;
+                                    ctyp_attributes = []} :: acc)
+                                  xs
+                    in
+                    make_caselist_from_rflist
+                       ({ c_lhs = make_Tpat_variant cons (Some (List.hd (pat_list 1))) (ref rd);
+                          c_guard = None;
+                          c_rhs = make_Texp_tuple
+                                     [make_Texp_constant (Const_string ("`"^cons,None));
+                                      make_cps_expr 1 (make_tyl [] tyl)]} :: acc)
+                       xs
+            | (cons,Rabsent)::xs ->
+                    failwith "TODO: Types.Rabsent"
         in
         let case_list = make_caselist_from_rflist [] rf_list in
         make_Texp_apply (make_Texp_ident (path_ident_create "_pp__variant"))
@@ -380,7 +399,7 @@ let rec select_pp typ =
                                                       [Nolabel,Some (make_Texp_constant (Const_string (ty_s,None)))])])
                               [Nolabel,Some (make_Texp_construct (Lident "()") [])]];
                      from_tfields rest]
-        | _ -> failwith "from_tfields"
+        | _ -> failwith "TODO: from_tfields"
     in
     match typ.desc with
     | Tvar None -> 
