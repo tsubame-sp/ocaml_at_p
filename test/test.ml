@@ -151,6 +151,7 @@ let _ =
     let {a=a_elm;b=b_elm} [@p] = {a=[10];b=(2e5,"2e^5")} in
     let Some e [@p] = Some 10 in
     let `Some e2 [@p] = `Some 20 in
-    let ((a,10)|(a,20)) [@p] = (10,10) in
-    Format.(pp_print_string std_formatter "DONE.")
+    let ((fst,10)|(fst,20)) [@p] = (10,10) in
+    Format.(pp_print_string std_formatter "DONE.");
+    ignore(x,a,b,l1,l2,l3,y,ys,a_elm,b_elm,e,e2,fst)
 

@@ -88,9 +88,18 @@ module MapArg : TypedtreeMap.MapArgument = struct
                     if check
                     then
                         let p = {pat with pat_attributes = cut} in
-                        let pat_str = (Format.asprintf "%a" Pprintast.pattern (Untypeast.(default_mapper.pat default_mapper p))) ^ " = " in
-                        let ms = ({txt="ps";loc=Location.none},
-                                  Parsetree.PStr [Ast_helper.(Str.eval (Exp.constant (Parsetree.Pconst_string (pat_str,None))))]) in
+                        let pat_str = 
+                            Format.asprintf 
+                              "%a = " 
+                              Pprintast.pattern 
+                              (Untypeast.(default_mapper.pat default_mapper p)) 
+                        in
+                        let ms =
+                            let open Ast_helper in
+                            let open Parsetree in
+                            ({txt="ps";loc=Location.none},
+                             (PStr [Str.eval (Exp.constant (Pconst_string (pat_str,None)))]))
+                        in
                         let mp = ({txt="p";loc=Location.none},Parsetree.PStr []) in
                         let new_vb = 
                             {vb with vb_pat = p;
