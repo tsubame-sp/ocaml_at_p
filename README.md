@@ -7,7 +7,7 @@ note : This tool doesn't consider use in combination with other PPX tools using 
 #How to use
 
 ##installation
-Version : 1.0.2
+Version : 1.1.0
 
 required OCaml version : OCaml 4.03.0
 
@@ -91,7 +91,7 @@ OCamlプログラムのデバッグ出力をサポートするツールです．
 #使用方法
 
 ##インストール方法
-Version : 1.0.2
+Version : 1.1.0
 
 必要な OCaml version : OCaml 4.03.0
 
