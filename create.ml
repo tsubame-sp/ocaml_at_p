@@ -4,7 +4,9 @@ open Helper
 open Longident
 
 (* case_list table for type_extension & poly variant *)
+(*
 let caselist_tbl = Hashtbl.create 10
+*)
 
 (* core_type Ttyp_var to string *)
 let get_name ct =
@@ -55,7 +57,7 @@ let fun_exp exp ls =
  * *)
 let make_variant_expr const_decl_list =
     let rec make_caselist_from_cdlist acc = function
-        | [] -> acc
+        | [] -> List.rev acc
         | {cd_name = {txt=name;_};cd_args = Cstr_tuple core_type_list;_}::xs ->
                 make_caselist_from_cdlist 
                     ({ c_lhs = make_Tpat_construct (Lident name) (pat_list (List.length core_type_list));
@@ -75,7 +77,7 @@ let make_variant_expr const_decl_list =
  * make pp for record
  * *)
 let make_record_expr label_decl_list =
-    let make_caselist_from_ldlist ()=
+    let make_caselist_from_ldlist () =
         let rec make_pp_fields = function
             | [] -> make_Texp_construct (Lident "[]") []
             | {ld_name = {txt=name;_};ld_type = ctype;_ }::xs ->

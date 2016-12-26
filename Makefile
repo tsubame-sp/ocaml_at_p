@@ -45,3 +45,7 @@ remove:
 #clean
 clean:
 	-rm *.cm* *.o ocaml_at_p.opt
+
+reset: clean remove
+
+reinstall: reset install
