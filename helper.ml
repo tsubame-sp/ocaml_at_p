@@ -399,66 +399,7 @@ let rec select_pp typ =
         in
         from_list [] typelist
     in
-    (*
-    let rec check_rf = function
-        | [] -> ()
-        | (cons,_)::xs ->
-                pre := SSet.add cons !pre;
-                check_rf xs
-    in
-            *)
     let from_row_desc ({ row_fields = rf_list;row_more = more;_ } as rd) =
-        (*
-        let rec check_more ty =
-            match ty.desc with
-            | Tlink ty2 ->
-                    print_endline "check Tlink";
-                    let _ = check_more ty2 in
-                    false
-            | Tvar None -> 
-                    print_endline "check Tvar";
-                    false
-            | Tvar (Some s) -> 
-                    print_endline ("check Tvar "^s);
-                    true
-            | Tarrow _ ->
-                    print_endline "check Tarrow";
-                    true
-            | Ttuple _ ->
-                    print_endline "check Ttuple";
-                    true
-            | Tconstr _ ->
-                    print_endline "check Tconstr";
-                    true
-            | Tobject _ ->
-                    print_endline "check Tobject";
-                    true
-            | Tfield _ ->
-                    print_endline "check Tfield";
-                    true
-            | Tnil ->
-                    print_endline "check Tnil";
-                    true
-            | Tsubst _ ->
-                    print_endline "check Tsubst";
-                    true
-            | Tvariant _ ->
-                    print_endline "check Tvariant";
-                    true
-            | Tunivar None ->
-                    print_endline "check Tunivar None";
-                    true
-            | Tunivar (Some s) ->
-                    print_endline ("check Tunivar "^s);
-                    true
-            | Tpoly _ ->
-                    print_endline "check Tpoly";
-                    true
-            | _ ->  
-                    print_endline "check false";
-                    true
-        in
-        *)
         let rec make_caselist_from_rflist acc = function
             | [] -> List.rev acc
             | (cons,Rpresent None)::xs ->
@@ -470,67 +411,28 @@ let rec select_pp typ =
                                        make_cps_expr 1 []] } :: acc)
                         xs
             | (cons,Rpresent (Some ty_expr))::xs ->
-                        
                     make_caselist_from_rflist
                         ({ c_lhs = make_Tpat_variant cons (Some (List.hd (pat_list 1))) ~rd:rd;
                            c_guard = None;
                            c_rhs = make_Texp_tuple
                                        [make_Texp_constant (Const_string ("`"^cons,None));
-                                        make_cps_expr 1 [{ctyp_desc = Ttyp_any;
-                                                          ctyp_type = ty_expr;
-                                                          ctyp_env = Env.empty;
-                                                          ctyp_loc = Location.none;
-                                                          ctyp_attributes = []}]] } :: acc)
+                                        make_cps_expr 1 [ty_expr]] } :: acc)
                         xs
             | (cons,Reither (_,tyl,_,_))::xs ->
-                    let rec make_tyl acc = function
-                        | [] -> List.rev acc
-                        | x::xs -> 
-                                make_tyl
-                                  ({ctyp_desc = Ttyp_any;
-                                    ctyp_type = x;
-                                    ctyp_env  = Env.empty;
-                                    ctyp_loc = Location.none;
-                                    ctyp_attributes = []} :: acc)
-                                  xs
-                    in
                     make_caselist_from_rflist
                        ({ c_lhs = make_Tpat_variant cons (Some (List.hd (pat_list 1))) ~rd:rd;
                           c_guard = None;
                           c_rhs = make_Texp_tuple
                                      [make_Texp_constant (Const_string ("`"^cons,None));
-                                      make_cps_expr 1 (make_tyl [] tyl)]} :: acc)
+                                      make_cps_expr 1 tyl]} :: acc)
                        xs
             | (cons,Rabsent)::xs ->
                     failwith "TODO: Types.Rabsent"
         in
-        (*
-        let b = check_more more in
-        if b && SSet.mem (fst (List.hd rf_list)) !pre
-        then
-             make_Texp_ident (path_ident_create "_pp__rec")
-        else
-            (let () = check_rf rf_list in
-        *)
-             let case_list = make_caselist_from_rflist [] rf_list in
-        (*
-             let vblist = 
-                 [{ vb_pat = make_Tpat_var "_pp__rec";
-                    vb_expr = 
-                        app_prfx
-        *)
-                           (make_Texp_apply 
-                                (make_Texp_ident (path_ident_create "_pp__variant"))
-                                [Nolabel,Some (make_Texp_function case_list)])(*;
-                    vb_attributes = [];
-                    vb_loc = Location.none }]
-             in
-             (pre := SSet.empty;
-              make_Texp_let
-                  Recursive
-                  vblist
-                  (make_Texp_ident (path_ident_create "_pp__rec"))))
-        *)
+        let case_list = make_caselist_from_rflist [] rf_list in
+        (make_Texp_apply 
+             (make_Texp_ident (path_ident_create "_pp__variant"))
+             [Nolabel,Some (make_Texp_function case_list)])
     in
     let rec from_tfields ty =
         match ty.desc with
@@ -702,7 +604,7 @@ and select_pp_core ?(ty_name="") cty =
                        c_guard = None;
                        c_rhs = make_Texp_tuple
                                    [make_Texp_constant (Const_string ("`"^const,None));
-                                    make_cps_expr 1 ctyl]} :: acc)
+                                    make_cps_expr_cty 1 ctyl]} :: acc)
                     xs
         | (Tinherit {ctyp_desc = Ttyp_constr(Path.Pident {name=s;_},_,ctyl);})::xs ->
                 let inh_cl = Hashtbl.find caselist_tbl s in
@@ -825,8 +727,8 @@ and pat_list n =
     in
     loop [] n
 
-(* create cps *)
-and make_cps_expr n = function
+(* create cps for ctyl *)
+and make_cps_expr_cty n = function
     | [] -> make_Texp_construct (Lident "[]") []
     | x::xs ->
             make_Texp_construct
@@ -835,6 +737,19 @@ and make_cps_expr n = function
                    (make_Texp_apply
                        (make_Texp_ident (path_ident_create "!%"))
                        [Nolabel,Some (select_pp_core x)])
+                   [Nolabel,Some (make_Texp_ident (path_ident_create ("_p"^string_of_int n)))];
+                make_cps_expr_cty (n+1) xs]
+
+(* create cps for type_expl_list *)
+and make_cps_expr n = function
+    | [] -> make_Texp_construct (Lident "[]") []
+    | x::xs ->
+            make_Texp_construct
+               (Lident "::")
+               [make_Texp_apply
+                   (make_Texp_apply
+                       (make_Texp_ident (path_ident_create "!%"))
+                       [Nolabel,Some (select_pp x)])
                    [Nolabel,Some (make_Texp_ident (path_ident_create ("_p"^string_of_int n)))];
                 make_cps_expr (n+1) xs]
 

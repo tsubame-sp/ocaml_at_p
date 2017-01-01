@@ -33,7 +33,7 @@ let make_variant_expr const_decl_list =
                        c_guard = None;
                        c_rhs = make_Texp_tuple
                                   [make_Texp_constant (Const_string (name,None));
-                                   make_cps_expr 1 core_type_list]} :: acc)
+                                   make_cps_expr_cty 1 core_type_list]} :: acc)
                     xs
         | _::xs -> failwith "TODO"
     in
@@ -119,7 +119,7 @@ let make_ext_expr ty_name ex_cons_list =
                        c_guard = None;
                        c_rhs = make_Texp_tuple
                                   [make_Texp_constant (Const_string (name,None));
-                                   make_cps_expr 1 core_type_list]} :: acc)
+                                   make_cps_expr_cty 1 core_type_list]} :: acc)
                     xs
         | _ -> failwith "TODO"
     in
