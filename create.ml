@@ -3,11 +3,7 @@ open Typedtree
 open Helper
 open Longident
 
-(* case_list table for type_extension & poly variant *)
 (*
-let caselist_tbl = Hashtbl.create 10
-*)
-
 (* core_type Ttyp_var to string *)
 let get_name ct =
     match ct.ctyp_desc with
@@ -16,41 +12,14 @@ let get_name ct =
 
 (* fun _pp_1 -> ... -> expr : expression -> (core_type * variance) list -> expression *)
 let fun_exp exp ls =
-    let mk_fun name e =
-        { exp_desc = 
-            Texp_function
-                (Nolabel,
-                 [{ c_lhs = {pat_desc = 
-                               Tpat_var ((Ident.create name),{txt=name;loc=Location.none});
-                             pat_loc = Location.none;
-                             pat_extra = [];
-                             pat_type = type_none;
-                             pat_env = Env.empty;
-                             pat_attributes = []};
-                    c_guard = None;
-                    c_rhs = e}],
-                 Total);
-          exp_loc = Location.none;
-          exp_extra = [];
-          exp_type = type_none;
-          exp_env = Env.empty;
-          exp_attributes = []}
-    in
     let rec loop acc = function
     | [] -> acc
     | x::xs -> 
             let name = "_arg_" ^ get_name x in
-            loop (mk_fun name acc) xs
+            loop (make_Texp_fun name acc) xs
     in
-    let app_prfx =
-        mk_fun "_prf" 
-               (mk_fun "_arg"
-                       (make_Texp_apply
-                            exp
-                            [Nolabel,Some (make_Texp_ident (path_ident_create "_prf"));
-                             Nolabel,Some (make_Texp_ident (path_ident_create "_arg"))]))
-    in
-    loop app_prfx (List.rev (List.map fst ls))
+    loop (app_prfx exp) (List.rev (List.map fst ls))
+*)
 
 (* 
  * make pp for variant 
@@ -110,7 +79,8 @@ let make_pp_type =
     function
     (* manifest *)
     | { typ_name = {txt=name;_}; typ_params = params; typ_manifest = Some ty;_ } ->
-            make_vb name (fun_exp (select_pp_core ty) params)
+            Hashtbl.add params_tbl name params;
+            make_vb name (fun_exp (select_pp_core ~ty_name:name ty) params)
     (* variant *)
     | { typ_name = {txt=name;_}; typ_params = params; typ_kind = Ttype_variant const_decl_list;_ } ->
             let expression = make_variant_expr const_decl_list in 
