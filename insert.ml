@@ -19,7 +19,17 @@ let expr_this typ =
     }
 
 (* actual insert function *)
-let insert_pp expr print_expr b =
+let insert_pp expr print_expr b extra =
+    (*
+    let rec check_extra = function
+        | [] -> None
+        | (Texp_constraint cty,_,_)::xs
+        | (Texp_coerce (_,cty),_,_)::xs ->
+                Some cty
+        | _::xs ->
+                check_extra xs
+    in
+    *)
     let expr_newline =
         if b
         then
@@ -44,11 +54,11 @@ let insert_pp expr print_expr b =
             }
         else expr
     in
-    let expr_pp = 
+    let expr_pp pp = 
         { exp_desc = 
             Texp_sequence 
                 ({ exp_desc = 
-                    Texp_apply (select_pp print_expr.exp_type,
+                    Texp_apply (pp,
                                [Nolabel,Some expr_std_formatter;Nolabel,Some print_expr]);
                    exp_loc = Location.none;
                    exp_extra = [];
@@ -64,4 +74,15 @@ let insert_pp expr print_expr b =
           exp_attributes = []
         }
     in
-    expr_pp
+    let pp =
+    (*
+        match check_extra extra with
+        | None ->
+    *)
+                select_pp print_expr.exp_type
+    (*
+        | Some cty -> 
+                select_pp_core cty
+    *)
+    in
+    expr_pp pp

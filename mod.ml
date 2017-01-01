@@ -10,6 +10,43 @@ module MapArg : TypedtreeMap.MapArgument = struct
     include TypedtreeMap.DefaultMapArgument
 
     (* 
+     * let式のpatternへのマーカ検出
+     * 
+     * 1つ以上あると1回だけ出力
+     *)
+    let rec check_attr a1 a2 = function
+        | [] -> (a1,List.rev a2)
+        | ({txt="p";_},_)::xs -> check_attr true a2 xs
+        | x::xs -> check_attr a1 (x::a2) xs
+
+    let rec check_pat acc = function
+        | [] -> List.rev acc
+        | ({vb_pat=pat;vb_expr=e;_} as vb)::xs ->
+                let (check,cut) = check_attr false [] pat.pat_attributes in
+                if check
+                then
+                    let p = {pat with pat_attributes = cut} in
+                    let pat_str = 
+                        Format.asprintf 
+                          "%a = " 
+                          Pprintast.pattern 
+                          (Untypeast.(default_mapper.pat default_mapper p)) 
+                    in
+                    let ms =
+                        let open Ast_helper in
+                        let open Parsetree in
+                        ({txt="ps";loc=Location.none},
+                         (PStr [Str.eval (Exp.constant (Pconst_string (pat_str,None)))]))
+                    in
+                    let mp = ({txt="p";loc=Location.none},Parsetree.PStr []) in
+                    let new_vb = 
+                        {vb with vb_pat = p;
+                                 vb_expr = 
+                                     {e with exp_attributes = ms :: mp :: e.exp_attributes}} in
+                    check_pat (new_vb :: acc) xs
+                else check_pat (vb :: acc) xs
+
+    (* 
      * expression mapper 
      * *)
     let enter_expression expr =
@@ -21,22 +58,22 @@ module MapArg : TypedtreeMap.MapArgument = struct
                     val_attributes = []
                   }
         in
-        let rec pickup_attr expr = function
+        let rec pickup_attr expr extra = function
             | [] -> expr_this expr.exp_type
             (* print argument with newline *)
             | ({txt = "p";_},Parsetree.PStr [{Parsetree.pstr_desc=Parsetree.Pstr_eval (print_ast_expr,_);_}])::xs -> 
-                    insert_pp (pickup_attr expr xs) (Typecore.type_expression Env.(add_value this_i (value_d expr) expr.exp_env) print_ast_expr) true
+                    insert_pp (pickup_attr expr extra xs) (Typecore.type_expression Env.(add_value this_i (value_d expr) expr.exp_env) print_ast_expr) true extra
             (* print expression with newline *)
             | ({txt = "p";_},Parsetree.PStr [])::xs ->
-                    insert_pp (pickup_attr expr xs) (expr_this expr.exp_type) true
+                    insert_pp (pickup_attr expr extra xs) (expr_this expr.exp_type) true extra
             (* print argument *)
             | ({txt = "ps";_},Parsetree.PStr [{Parsetree.pstr_desc=Parsetree.Pstr_eval (print_ast_expr,_);_}])::xs -> 
-                    insert_pp (pickup_attr expr xs) (Typecore.type_expression Env.(add_value this_i (value_d expr) expr.exp_env) print_ast_expr) false
+                    insert_pp (pickup_attr expr extra xs) (Typecore.type_expression Env.(add_value this_i (value_d expr) expr.exp_env) print_ast_expr) false extra
             (* print expression *)
             | ({txt = "ps";_},Parsetree.PStr [])::xs ->
-                    insert_pp (pickup_attr expr xs) (expr_this expr.exp_type) false
+                    insert_pp (pickup_attr expr extra xs) (expr_this expr.exp_type) false extra
             (* other attributes *)
-            | _::xs -> pickup_attr expr xs
+            | _::xs -> pickup_attr expr extra xs
         in
         let mk_exp attr extra expr =
             { exp_desc = 
@@ -53,7 +90,7 @@ module MapArg : TypedtreeMap.MapArgument = struct
                          vb_attributes = [];
                          vb_loc = Location.none;
                       }],
-                     pickup_attr expr attr);
+                     pickup_attr expr extra attr);
               exp_loc = Location.none;
               exp_extra = [];
               exp_type = expr.exp_type;
@@ -71,52 +108,6 @@ module MapArg : TypedtreeMap.MapArgument = struct
             in
             loop [] [] ls
         in
-        (* 
-         * let式のpatternへのマーカ検出
-         * 
-         * 1つ以上あると1回だけ出力
-         *)
-        let rec check_attr a1 a2 = function
-            | [] -> (a1,List.rev a2)
-            | ({txt="p";_},_)::xs -> check_attr true a2 xs
-            | x::xs -> check_attr a1 (x::a2) xs
-        in
-        let rec check_pat acc = function
-            | [] -> List.rev acc
-            | ({vb_pat=pat;vb_expr=e;_} as vb)::xs ->
-                    let (check,cut) = check_attr false [] pat.pat_attributes in
-                    if check
-                    then
-                        let p = {pat with pat_attributes = cut} in
-                        let pat_str = 
-                            Format.asprintf 
-                              "%a = " 
-                              Pprintast.pattern 
-                              (Untypeast.(default_mapper.pat default_mapper p)) 
-                        in
-                        let ms =
-                            let open Ast_helper in
-                            let open Parsetree in
-                            ({txt="ps";loc=Location.none},
-                             (PStr [Str.eval (Exp.constant (Pconst_string (pat_str,None)))]))
-                        in
-                        let mp = ({txt="p";loc=Location.none},Parsetree.PStr []) in
-                        let new_vb = 
-                            {vb with vb_pat = p;
-                                     vb_expr = 
-                                         {e with exp_attributes = ms :: mp :: e.exp_attributes}} in
-                        check_pat (new_vb :: acc) xs
-                    else check_pat (vb :: acc) xs
-        in
-        (*
-        let insert_expr expr pl =
-            let rec sub = function
-                | [] -> expr
-                | x::xs -> make_Texp_sequence (insert_pp_for_pattern x) (sub xs)
-            in
-            sub pl
-        in
-        *)
         let pat_checked_expr =
             match expr.exp_desc with
             | Texp_let (f,vblist,e) ->
@@ -138,6 +129,10 @@ module MapArg : TypedtreeMap.MapArgument = struct
     let enter_structure structure =
         let rec select_str_item acc = function
             | [] -> List.rev acc
+            (* declaration let *)
+            | ({str_desc = Tstr_value (flag,vblist);_} as str_item)::xs ->
+                    let new_vblist = check_pat [] vblist in
+                    select_str_item ({ str_item with str_desc = Tstr_value (flag,new_vblist) }::acc) xs
             (* variant, record, type_extension open, poly variant*)
             | ({str_desc = Tstr_type (_,type_decl_list);_} as str_item)::xs ->
                     select_str_item (make_pp_type_set type_decl_list (str_item :: acc)) xs

@@ -462,30 +462,25 @@ let rec select_pp typ =
         let rec make_caselist_from_rflist acc = function
             | [] -> List.rev acc
             | (cons,Rpresent None)::xs ->
-                    let rhs =
-                        make_Texp_tuple
-                            [make_Texp_constant (Const_string ("`"^cons,None));
-                             make_cps_expr 1 []]
-                    in
                     make_caselist_from_rflist
                         ({ c_lhs = make_Tpat_variant cons None ~rd:rd;
                            c_guard = None;
-                           c_rhs = rhs } :: acc)
+                           c_rhs = make_Texp_tuple
+                                       [make_Texp_constant (Const_string ("`"^cons,None));
+                                       make_cps_expr 1 []] } :: acc)
                         xs
             | (cons,Rpresent (Some ty_expr))::xs ->
-                    let rhs =
-                        make_Texp_tuple
-                            [make_Texp_constant (Const_string ("`"^cons,None));
-                             make_cps_expr 1 [{ctyp_desc = Ttyp_any;
-                                               ctyp_type = ty_expr;
-                                               ctyp_env = Env.empty;
-                                               ctyp_loc = Location.none;
-                                               ctyp_attributes = []}]]
-                    in
+                        
                     make_caselist_from_rflist
                         ({ c_lhs = make_Tpat_variant cons (Some (List.hd (pat_list 1))) ~rd:rd;
                            c_guard = None;
-                           c_rhs = rhs } :: acc)
+                           c_rhs = make_Texp_tuple
+                                       [make_Texp_constant (Const_string ("`"^cons,None));
+                                        make_cps_expr 1 [{ctyp_desc = Ttyp_any;
+                                                          ctyp_type = ty_expr;
+                                                          ctyp_env = Env.empty;
+                                                          ctyp_loc = Location.none;
+                                                          ctyp_attributes = []}]] } :: acc)
                         xs
             | (cons,Reither (_,tyl,_,_))::xs ->
                     let rec make_tyl acc = function
@@ -680,11 +675,15 @@ and select_pp_core ?(ty_name="") cty =
         let rec loop a = function
         | [] -> a
         | ({c_rhs = e;_} as x)::xs -> 
-                loop 
-                   ({x with c_rhs = make_Texp_apply
-                                        (fun_exp ~prfx:false e params)
-                                        (arg_select_pp_ctyl [] ctyl); } :: a) 
-                   xs
+                if (List.length params) = 0
+                then
+                    loop (x::a) xs
+                else
+                    loop 
+                       ({x with c_rhs = make_Texp_apply
+                                            (fun_exp ~prfx:false e params)
+                                            (arg_select_pp_ctyl [] ctyl); } :: a) 
+                       xs
         in
         loop ori b
     in
