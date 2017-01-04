@@ -179,12 +179,12 @@ module MapArg : TypedtreeMap.MapArgument = struct
         { signature with sig_items = (select_sig_item [] signature.sig_items) }
 
     (* 
-     * module Ppshow open 
+     * module Print open 
      * *)
     let leave_structure structure =
         let str = { str_desc =
-                       Tstr_open { open_path = path_ident_create "Ppshow";
-                                   open_txt = {txt=Lident "Ppshow";loc=Location.none};
+                       Tstr_open { open_path = path_ident_create "Print";
+                                   open_txt = {txt=Lident "Print";loc=Location.none};
                                    open_override = Fresh;
                                    open_loc = Location.none;
                                    open_attributes = []};

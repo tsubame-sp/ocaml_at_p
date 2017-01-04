@@ -8,13 +8,13 @@ FB = -package typpx,compiler-libs -linkpkg
 LINK = helper.cmx insert.cmx create.cmx mod.cmx ocaml_at_p.cmx
 
 #build
-build: ppshow.cmo ppshow.cmx ocaml_at_p.opt
+build: print.cmo print.cmx ocaml_at_p.opt
 
-ppshow.cmo : ppshow.ml
-	$(FIND) $(OC) $(FA) -c ppshow.ml
+print.cmo : print.ml
+	$(FIND) $(OC) $(FA) -c print.ml
 
-ppshow.cmx : ppshow.ml
-	$(FIND) $(OPT) $(FA) -c ppshow.ml
+print.cmx : print.ml
+	$(FIND) $(OPT) $(FA) -c print.ml
 
 #ocamlopt
 ocaml_at_p.opt : helper.cmx insert.cmx create.cmx mod.cmx ocaml_at_p.cmx
@@ -37,7 +37,7 @@ ocaml_at_p.cmx : ocaml_at_p.ml
 
 #install,uninstall
 install : build
-	$(FIND) install ocaml_at_p META ocaml_at_p.opt ppshow.cm* ppshow.o
+	$(FIND) install ocaml_at_p META ocaml_at_p.opt print.cm* print.o
 
 remove:
 	-$(FIND) remove ocaml_at_p
