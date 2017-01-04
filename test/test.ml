@@ -171,7 +171,7 @@ let _ = {Incl.a = 1;Incl.b = 3.14} [@p]
 let () = Format.(pp_print_newline std_formatter ())
 
 let x [@p] = 10
-let Some e [@p] = Some "string"
+let Some e [@p] = Some "String"
 
 let () = Format.(pp_print_newline std_formatter ())
 

@@ -1,8 +1,17 @@
+(* ======================================================================
+ * Copyright © 2013 Keisuke Nakano. All rights reserved. 
+ *)
+
 open Format
 
-let std_formatter = std_formatter
+let strbuf = Buffer.create 1024
 
-let _pp_newline = pp_print_newline
+let s_of _pp_a a = 
+    let prf = formatter_of_buffer strbuf in
+    _pp_a prf a; pp_print_flush prf ();
+    let str = Buffer.contents strbuf in 
+    Buffer.clear strbuf;
+    str
 
 let _pp_int = pp_print_int
 let _pp_float = pp_print_float
@@ -11,14 +20,7 @@ let _pp_bool = pp_print_bool
 let _pp_string = pp_print_string
 let _pp_format6 prf fmt = _pp_string prf (string_of_format fmt^" : < format6 >")
 let _pp_unit prf () = _pp_string prf "()"
-let _pp_bytes prf x = _pp_string prf (Bytes.to_string x)
 
-(* Pervasives *)
-let _pp_in_channel prf (_:in_channel) = _pp_string prf "< in_channel >"
-let _pp_out_channel prf (_:out_channel) = _pp_string prf "< out_channel >"
-
-let _pp_format4 prf (fmt:(_,_,_,_) format4) = _pp_string prf (string_of_format fmt^" : < format4 >")
-let _pp_format prf (fmt:(_,_,_) format) = _pp_string prf (string_of_format fmt^" : < format >")
 
 (* list *)
 let _pp_list_empty prf _ = _pp_string prf "[]"
@@ -41,16 +43,6 @@ let _pp_array _pp_a prf xs =
         _pp_a prf xs.(0);
         for i=1 to len-1 do fprintf prf ";@;%a" _pp_a xs.(i) done end;
         fprintf prf "|]@]"
-
-(* string_of *)
-let strbuf = Buffer.create 1024
-
-let s_of _pp_a a = 
-    let prf = formatter_of_buffer strbuf in
-    _pp_a prf a; pp_print_flush prf ();
-    let str = Buffer.contents strbuf in 
-    Buffer.clear strbuf;
-    str
 
 (* pp_poly *)
 type pp_poly = { pp_poly : 'b. 'b pp_neg -> 'b }
@@ -148,6 +140,9 @@ let _pp_fpclass prf x = _pp__variant (function
     | FP_infinite -> "FP_infinite", []
     | FP_nan -> "FP_nan", []) prf x
 
+let _pp_in_channel prf (_:in_channel) = _pp_string prf "< in_channel >"
+let _pp_out_channel prf (_:out_channel) = _pp_string prf "< out_channel >"
+
 let _pp_open_flag prf x = _pp__variant (function
     | Open_rdonly -> "Open_rdonly", []
     | Open_wronly -> "Open_wronly", []
@@ -161,9 +156,23 @@ let _pp_open_flag prf x = _pp__variant (function
 
 let _pp_ref _pp_a prf x = _pp__record (fun r -> ["contents", !%_pp_a r.contents]) prf x
 
+let _pp_format4 prf (fmt:(_,_,_,_) format4) = _pp_string prf (string_of_format fmt^" : < format4 >")
+let _pp_format prf (fmt:(_,_,_) format) = _pp_string prf (string_of_format fmt^" : < format >")
+
 let _pp_exn prf exn = _pp_string prf (Printexc.to_string exn)
 
+module String = struct
+    include String
+    let _pp_t prf x = _pp_string prf x
+end
+
+(* ===================================================================== *)
+
+let _pp_bytes prf x = _pp_string prf (Bytes.to_string x)
+
 let _pp__function str prf _ = _pp_string prf ("< fun : "^str^" >")
+
+let _pp_newline = pp_print_newline
 
 let _pp_int32 prf x = _pp_string prf (Int32.to_string x ^ "l")
 let _pp_int64 prf x = _pp_string prf (Int64.to_string x ^ "L")
@@ -176,7 +185,3 @@ let _pp__nouse prf _ = _pp_string prf "< This is dummy pp >"
 
 let _pp__trash prf x = ()
 
-module String = struct
-    include String
-    let _pp_t prf x = _pp_string prf x
-end
