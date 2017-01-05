@@ -43,24 +43,32 @@ In OCaml@p, when you write marker [@p] behind expression that you want to print 
 let add x y = x + y [@p x] [@p y] [@p] [@p _this+100]
 
 let a = add 1 10
+let b [@p] = a
 ```
 
 Then，markers (`[@p x],[@p y],[@p]`) are attached the expression (`x + y`)．Two marker `[@p x]` and `[@p y]` are used to print values of expressions `x` and `y` ，and the marker `[@p]` is the value of the expression `x + y`．The variable `_this` is specific one bound by result of evaluation to expression (`x + y`). `_this` is the special variable bound by the result value of evaluating the expression. The following is result of run the program.
 
 ```
-1 			<- [@p x]         の出力
-10			<- [@p y]         の出力
-11			<- [@p]           の出力
-111         <- [@p _this+100] の出力
+1 			<- at [@p x]
+10			<- at [@p y]
+11			<- at [@p]
+111         <- at [@p _this+100]
+b = 11      <- at "let b [@p] = a"
 ```
 
 ###Marker types
 
-There are two types marker `[@p]` and `[@ps]`.
+There are two types marker `[@p]`, `[@ps]`, `let x [@p]`.
 
-* `[@p]` - newline after printing
+* `e [@p]` - newline after printing e
 
-* `[@ps]` - not newline after printing
+* `e [@p expr]` - newline after printing expr
+
+* `e [@ps]` - not newline after printing e
+
+* `e [@ps expr]` - not newline after printing expr
+
+* `let x [@p] = e` - newline after printting "x = " and e
 
 ###Outer module check [@@@ppopen]
 
@@ -128,6 +136,7 @@ OCaml@pでは返す値を出力したい式にマーカ[@p]を記述すること
 let add x y = x + y [@p x] [@p y] [@p] [@p _this+100]
 
 let a = add 1 10
+let b [@p] = a
 ```
 
 ここで，`[@p x],[@p y],[@p]`は式`x + y`に付与されています．`[@p x],[@p y]`はそれぞれ`x,y`の値を，`[@p]`は`x + y`の値を出力します．`_this`は特別な変数で，式`x + y`の評価結果が束縛されている．このプログラムを実行した時の出力結果は以下のようになります．
@@ -137,15 +146,22 @@ let a = add 1 10
 10			<- [@p y] の出力
 11			<- [@p]   の出力
 111         <- [@p _this+100] の出力
+b = 11      <- let b [@p] = a での出力
 ```
 
 ###マーカの種類
 
-マーカは2種類存在する．
+マーカは5種類存在する．
 
-* `[@p]` - 出力後に改行
+* `e [@p]` - `e`の評価結果を出力後に改行
 
-* `[@ps]` - 出力後に改行しない
+* `e [@p expr]` - `expr`の評価結果を出力後に改行
+
+* `e [@ps]` - `e`の評価結果を出力後に改行しない
+
+* `e [@ps expr]` - `expr`の評価結果を出力後に改行しない
+
+* `let x [@p] = e` - `"x = "`と`e`の評価結果を改行
 
 ###外部モジュールチェック [@@@ppopen]
 
