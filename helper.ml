@@ -457,7 +457,7 @@ let rec select_pp typ =
     | Tvar None -> 
             make_Texp_ident (path_ident_create "_pp__unsup") ~typ:typ
     | Tvar (Some s) ->
-            make_Texp_ident (path_ident_create ("_arg_"^s)) ~typ:typ
+            make_Texp_ident (path_ident_create ("_pp_'"^s)) ~typ:typ
     | Tarrow _ ->
             let type_str = Format.asprintf "%a" Printtyp.type_expr typ in
             make_Texp_apply (make_Texp_ident (path_ident_create ("_pp__function")))
@@ -632,7 +632,7 @@ and select_pp_core ?(ty_name="") cty =
     | Ttyp_any -> 
             make_Texp_ident (path_ident_create "_pp__unsup") ~typ:cty.ctyp_type
     | Ttyp_var s ->
-            make_Texp_ident (path_ident_create ("_arg_"^s)) ~typ:cty.ctyp_type
+            make_Texp_ident (path_ident_create ("_pp_'"^s)) ~typ:cty.ctyp_type
     | Ttyp_arrow _ ->
             let type_str = Format.asprintf "%a" Printtyp.type_expr cty.ctyp_type in
             make_Texp_apply (make_Texp_ident (path_ident_create ("_pp__function")))
@@ -699,11 +699,11 @@ and select_pp_core ?(ty_name="") cty =
             *)
                 (make_Texp_let 
                      Recursive 
-                     [{ vb_pat = make_Tpat_var ("_arg_"^s);
+                     [{ vb_pat = make_Tpat_var ("_pp_'"^s);
                         vb_expr = app_prfx (select_pp_core ctyp);
                         vb_attributes = [];
                         vb_loc = Location.none }]
-                     (make_Texp_ident (path_ident_create ("_arg_"^s))))
+                     (make_Texp_ident (path_ident_create ("_pp_'"^s))))
     | Ttyp_variant (row_field_list,_,_) ->
             let case_list = make_caselist_var [] row_field_list in
             Hashtbl.add caselist_tbl ty_name case_list;
@@ -772,7 +772,7 @@ and fun_exp ?(prfx = true) exp ls =
     let rec loop acc = function
         | [] -> acc
         | x::xs -> 
-                let name = "_arg_" ^ get_name x in
+                let name = "_pp_'" ^ get_name x in
                 loop (make_Texp_fun name acc) xs
     in
     if prfx

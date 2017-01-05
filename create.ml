@@ -3,24 +3,6 @@ open Typedtree
 open Helper
 open Longident
 
-(*
-(* core_type Ttyp_var to string *)
-let get_name ct =
-    match ct.ctyp_desc with
-    | Ttyp_var s -> s
-    | _ -> failwith "TODO"
-
-(* fun _pp_1 -> ... -> expr : expression -> (core_type * variance) list -> expression *)
-let fun_exp exp ls =
-    let rec loop acc = function
-    | [] -> acc
-    | x::xs -> 
-            let name = "_arg_" ^ get_name x in
-            loop (make_Texp_fun name acc) xs
-    in
-    loop (app_prfx exp) (List.rev (List.map fst ls))
-*)
-
 (* 
  * make pp for variant 
  * *)
