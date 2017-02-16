@@ -62,7 +62,7 @@ let make_pp_type =
     (* manifest *)
     | { typ_name = {txt=name;_}; typ_params = params; typ_manifest = Some ty;_ } ->
             Hashtbl.add params_tbl name params;
-            make_vb name (fun_exp (select_pp_core ~ty_name:name ty) params)
+            make_vb name (fun_exp (select_pp_core (*~ty_name:name*) ty) params)
     (* variant *)
     | { typ_name = {txt=name;_}; typ_params = params; typ_kind = Ttype_variant const_decl_list;_ } ->
             let expression = make_variant_expr const_decl_list in 

@@ -62,16 +62,32 @@ module MapArg : TypedtreeMap.MapArgument = struct
             | [] -> expr_this expr.exp_type
             (* print argument with newline *)
             | ({txt = "p";_},Parsetree.PStr [{Parsetree.pstr_desc=Parsetree.Pstr_eval (print_ast_expr,_);_}])::xs -> 
-                    insert_pp (pickup_attr expr extra xs) (Typecore.type_expression Env.(add_value this_i (value_d expr) expr.exp_env) print_ast_expr) true extra
+                    insert_pp
+                       (pickup_attr expr extra xs) 
+                       (Typecore.type_expression Env.(add_value this_i (value_d expr) expr.exp_env) print_ast_expr) 
+                       true 
+                       extra
             (* print expression with newline *)
             | ({txt = "p";_},Parsetree.PStr [])::xs ->
-                    insert_pp (pickup_attr expr extra xs) (expr_this expr.exp_type) true extra
+                    insert_pp 
+                       (pickup_attr expr extra xs) 
+                       (expr_this expr.exp_type) 
+                       true 
+                       extra
             (* print argument *)
             | ({txt = "ps";_},Parsetree.PStr [{Parsetree.pstr_desc=Parsetree.Pstr_eval (print_ast_expr,_);_}])::xs -> 
-                    insert_pp (pickup_attr expr extra xs) (Typecore.type_expression Env.(add_value this_i (value_d expr) expr.exp_env) print_ast_expr) false extra
+                    insert_pp 
+                       (pickup_attr expr extra xs) 
+                       (Typecore.type_expression Env.(add_value this_i (value_d expr) expr.exp_env) print_ast_expr) 
+                       false 
+                       extra
             (* print expression *)
             | ({txt = "ps";_},Parsetree.PStr [])::xs ->
-                    insert_pp (pickup_attr expr extra xs) (expr_this expr.exp_type) false extra
+                    insert_pp 
+                       (pickup_attr expr extra xs) 
+                       (expr_this expr.exp_type) 
+                       false 
+                       extra
             (* other attributes *)
             | _::xs -> pickup_attr expr extra xs
         in
@@ -79,7 +95,8 @@ module MapArg : TypedtreeMap.MapArgument = struct
             { exp_desc = 
                 Texp_let 
                     (Nonrecursive,
-                     [{  vb_pat = {  pat_desc = Tpat_var (Ident.create "_this",{txt = "_this";loc = Location.none});
+                     [{  vb_pat = {  pat_desc = Tpat_var (Ident.create "_this",
+                                                          {txt = "_this";loc = Location.none});
                                      pat_loc = Location.none;
                                      pat_extra = [];
                                      pat_type = expr.exp_type;
@@ -147,7 +164,8 @@ module MapArg : TypedtreeMap.MapArgument = struct
                 Tstr_attribute
                    ({txt="ppopen";_},
                     Parsetree.PStr ([{Parsetree.pstr_desc = 
-                        Parsetree.Pstr_eval ({Parsetree.pexp_desc=Parsetree.Pexp_construct ({txt = Lident name;_},_);_},_);_}])
+                       Parsetree.Pstr_eval ({ Parsetree.pexp_desc = 
+                           Parsetree.Pexp_construct ({txt = Lident name;_},_);_},_);_}])
                    )}::xs ->
                        ppopen := SSet.add name !ppopen;
                        select_str_item acc xs

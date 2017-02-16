@@ -1,3 +1,6 @@
+let debug_n = ref 0
+let pe = print_endline
+
 module SSet = Set.Make(struct
     type t = string
     let compare = compare
@@ -10,6 +13,24 @@ open Typedtree
 open Longident
 open Ident
 
+(* debug type_expr *)
+let check_type ty =
+    pe (match ty.desc with
+        | Tvar None -> "Tvar"
+        | Tvar (Some s) -> ("Tvar"^s)
+        | Tarrow _ -> "Tarrow"
+        | Ttuple _ -> "Ttuple"
+        | Tconstr _ -> "Tconstr"
+        | Tobject _ -> "Tobject"
+        | Tfield _ -> "Tfield"
+        | Tnil -> "Tnil"
+        | Tlink _ -> "Tlink"
+        | Tsubst _ -> "Tsubst"
+        | Tvariant _ -> "Tvariant"
+        | Tunivar _ -> "Tunivar"
+        | Tpoly _ -> "Tunivar"
+        | Tpackage _ -> "Tpackage")
+
 (* ppopen check *)
 let ppopen = ref SSet.empty
 
@@ -18,6 +39,11 @@ let caselist_tbl = ( Hashtbl.create 20 : (string,Typedtree.case list) Hashtbl.t 
 
 (* polymorphic variant's params tbl *)
 let params_tbl = ( Hashtbl.create 20 : (string,(core_type * variance) list) Hashtbl.t )
+
+(* alias poly-variants check *)
+let alias_tbl = ref ([] : (type_expr*string) list)
+
+let fun_level = ref 0
 
 (*
  * Types
@@ -401,7 +427,7 @@ let rec select_pp typ =
     in
     let from_row_desc ({ row_fields = rf_list;row_more = more;_ } as rd) =
         let rec make_caselist_from_rflist acc = function
-            | [] -> List.rev acc
+            | [] -> (*List.rev*) acc
             | (cons,Rpresent None)::xs ->
                     make_caselist_from_rflist
                         ({ c_lhs = make_Tpat_variant cons None ~rd:rd;
@@ -411,12 +437,15 @@ let rec select_pp typ =
                                        make_cps_expr 1 []] } :: acc)
                         xs
             | (cons,Rpresent (Some ty_expr))::xs ->
+                    let rhs = 
+                        make_Texp_tuple
+                           [make_Texp_constant (Const_string ("`"^cons,None));
+                            make_cps_expr 1 [ty_expr]]
+                    in
                     make_caselist_from_rflist
                         ({ c_lhs = make_Tpat_variant cons (Some (List.hd (pat_list 1))) ~rd:rd;
                            c_guard = None;
-                           c_rhs = make_Texp_tuple
-                                       [make_Texp_constant (Const_string ("`"^cons,None));
-                                        make_cps_expr 1 [ty_expr]] } :: acc)
+                           c_rhs = rhs} :: acc)
                         xs
             | (cons,Reither (_,tyl,_,_))::xs ->
                     make_caselist_from_rflist
@@ -429,10 +458,53 @@ let rec select_pp typ =
             | (cons,Rabsent)::xs ->
                     failwith "TODO: Types.Rabsent"
         in
-        let case_list = make_caselist_from_rflist [] rf_list in
-        (make_Texp_apply 
-             (make_Texp_ident (path_ident_create "_pp__variant"))
-             [Nolabel,Some (make_Texp_function case_list)])
+        let rec check_more more_ty acc =
+            (* debug begin *)
+            if !debug_n > 100
+            then exit 1
+            else debug_n := !debug_n + 1;
+            check_type more_ty;
+            (* debug end *)
+            match more_ty.desc with
+            | Tvariant { row_fields = rfl;row_more = mr;_ } ->
+                    check_more mr (rfl @ acc)
+            | Tlink ty ->
+                    check_more ty acc
+            | _ ->  acc
+        in
+        let fun_name = "_inter"^(string_of_int !fun_level) in
+        fun_level := !fun_level + 1;
+            (* debug begin *)
+            print_endline "[ ON ]";
+            (* debug end *)
+        let ret =
+            if List.mem_assq more !alias_tbl
+            then 
+                (let name = List.assq more !alias_tbl in
+                 alias_tbl := List.remove_assq more !alias_tbl;
+                 make_Texp_ident (path_ident_create name))
+            else 
+                (alias_tbl := (more,fun_name) :: !alias_tbl;
+                 let rfl = check_more more rf_list in
+                 let case_list = make_caselist_from_rflist [] rfl in
+                 let body = 
+                     make_Texp_apply 
+                        (make_Texp_ident (path_ident_create "_pp__variant"))
+                        [Nolabel,Some (make_Texp_function case_list)]
+                 in
+                 make_Texp_let 
+                    Recursive
+                    [{ vb_pat = make_Tpat_var fun_name;
+                       vb_expr = app_prfx body; 
+                       vb_attributes = [];
+                       vb_loc = Location.none }]
+                    (make_Texp_ident (path_ident_create fun_name)))
+        in
+            (* debug begin *)
+            print_endline "[ OFF ]";
+            (* debug end *)
+        fun_level := !fun_level - 1;
+        ret
     in
     let rec from_tfields ty =
         match ty.desc with
@@ -530,191 +602,7 @@ let rec select_pp typ =
     | Tpackage _ -> failwith "TODO: Tpackage"
 
 (* select pp from core_type *)
-(*
 and select_pp_core {ctyp_type = type_expr;_} = select_pp type_expr
-*)
-
-and select_pp_core ?(ty_name="") cty =
-    let typelist_to_arglist typelist = 
-        let rec from_list acc = function
-            | [] -> List.rev acc
-            | x::xs ->
-                    from_list ((Nolabel,Some (select_pp_core x)) :: acc) xs
-        in
-        from_list [] typelist
-    in
-    let rec make_caselist_obj acc_f = function
-        | [] -> [{ c_lhs = make_Tpat_any;
-                   c_guard = None;
-                   c_rhs = acc_f (make_Texp_construct (Lident "[]") [] )}]
-        | (name,_,cty)::xs ->
-                let type_s = Format.asprintf "%a" Printtyp.type_expr cty.ctyp_type in
-                make_caselist_obj
-                    (fun inter -> 
-                       acc_f
-                         (make_Texp_construct
-                              (Lident "::")
-                              [make_Texp_tuple
-                                   [make_Texp_constant (Const_string (name,None));
-                                    make_Texp_apply
-                                        (make_Texp_apply
-                                             (make_Texp_ident (path_ident_create "!%"))
-                                             [Nolabel,Some (make_Texp_apply
-                                                                (make_Texp_ident (path_ident_create "_pp__dump"))
-                                                                [Nolabel,Some (make_Texp_constant (Const_string (type_s,None)))])])
-                                        [Nolabel,Some (make_Texp_construct (Lident "()") [])]];
-                                   inter]))
-                    xs
-    in
-    let rec arg_select_pp_ctyl acc = function
-        | [] -> List.rev acc
-        | x::xs ->
-                arg_select_pp_ctyl
-                   ((Nolabel,Some (select_pp_core x)) :: acc)
-                   xs
-    in
-    let rev_app params ctyl ori b = 
-        let rec loop a = function
-        | [] -> a
-        | ({c_rhs = e;_} as x)::xs -> 
-                if (List.length params) = 0
-                then
-                    loop (x::a) xs
-                else
-                    loop 
-                       ({x with c_rhs = make_Texp_apply
-                                            (fun_exp ~prfx:false e params)
-                                            (arg_select_pp_ctyl [] ctyl); } :: a) 
-                       xs
-        in
-        loop ori b
-    in
-    let rec make_caselist_var acc = function
-        | [] -> List.rev acc
-        | (Ttag (const,_,_,ctyl))::xs ->
-                let len = List.length ctyl in
-                let arg =
-                    match len with
-                    | 0 -> None
-                    | 1 -> Some (List.hd (pat_list len))
-                    | _ -> Some (make_Tpat_tuple (pat_list len))
-                in
-                make_caselist_var
-                    ({ c_lhs = make_Tpat_variant const arg;
-                       c_guard = None;
-                       c_rhs = make_Texp_tuple
-                                   [make_Texp_constant (Const_string ("`"^const,None));
-                                    make_cps_expr_cty 1 ctyl]} :: acc)
-                    xs
-        | (Tinherit {ctyp_desc = Ttyp_constr(Path.Pident {name=s;_},_,ctyl);})::xs ->
-                let inh_cl = Hashtbl.find caselist_tbl s in
-                let params = Hashtbl.find params_tbl s in
-                make_caselist_var (rev_app params ctyl acc inh_cl) xs
-        | _ -> failwith "Inheritance from other file isn't unsupported."
-    in
-    (*
-    let check_params_alias ty_name s =
-        let rec loop = function
-            | [] -> false
-            | ({ctyp_desc = Ttyp_var name;_},_)::xs ->
-                    if name = s
-                    then true
-                    else loop xs
-            | _::xs -> loop xs
-        in
-        try
-            let ls = Hashtbl.find params_tbl ty_name in
-            loop ls
-        with _ -> false
-    in
-    *)
-    match cty.ctyp_desc with
-    | Ttyp_any -> 
-            make_Texp_ident (path_ident_create "_pp__unsup") ~typ:cty.ctyp_type
-    | Ttyp_var s ->
-            make_Texp_ident (path_ident_create ("_pp_'"^s)) ~typ:cty.ctyp_type
-    | Ttyp_arrow _ ->
-            let type_str = Format.asprintf "%a" Printtyp.type_expr cty.ctyp_type in
-            make_Texp_apply (make_Texp_ident (path_ident_create ("_pp__function")))
-                            [Nolabel,Some (make_Texp_constant (Const_string (type_str,None)))]
-    | Ttyp_tuple ctyl ->
-            let len = List.length ctyl in
-            if len < 2 || len > 7
-            then make_Texp_apply (make_Texp_ident (path_ident_create ("_pp__dump")))
-                                 [Nolabel,Some (make_Texp_constant (Const_string ("< "^string_of_int len^" elements tuple >",None)))]
-            else make_Texp_apply (make_Texp_ident (path_ident_create ("_pp__tuple"^string_of_int len)))
-                                 (typelist_to_arglist ctyl)
-    | Ttyp_constr (Path.Pident {name=s;_},_,[]) ->
-            make_Texp_ident (path_ident_create ("_pp_"^s)) ~typ:cty.ctyp_type
-    | Ttyp_constr (Path.Pident {name=s;_},_,typelist) ->
-            make_Texp_apply (make_Texp_ident (path_ident_create ("_pp_"^s)) ~typ:cty.ctyp_type) (typelist_to_arglist typelist)
-    | Ttyp_constr (path,_,[]) ->
-            begin match Path.name path with
-            | "Pervasives.in_channel"
-            | "Pervasives.out_channel"
-            | "Pervasives.fpclass" 
-            | "Pervasives.open_flag" -> 
-                    make_Texp_ident (path_ident_create ("_pp_"^Path.last path)) ~typ:cty.ctyp_type
-            | _ ->  let m = first (path_to_longident path) in
-                    if SSet.mem m !ppopen
-                    then make_Texp_ident (path_set path) ~typ:cty.ctyp_type
-                    else make_Texp_apply (make_Texp_ident (path_ident_create "_pp__dump") ~typ:cty.ctyp_type)
-                                         [Nolabel,Some (make_Texp_constant 
-                                                            (Const_string ("< "^m^"'s type without OCaml@p >",None)))]
-            end
-    | Ttyp_constr (path,_,typelist) ->
-            begin match Path.name path with
-            | "Pervasives.format6"
-            | "Pervasives.format4"
-            | "Pervasives.format" -> 
-                    make_Texp_ident (path_ident_create ("_pp_"^Path.last path)) ~typ:cty.ctyp_type
-            | "Pervasives.ref" -> 
-                    make_Texp_apply (make_Texp_ident (path_ident_create ("_pp_"^Path.last path)) ~typ:cty.ctyp_type) (typelist_to_arglist typelist)
-            | _ ->  let m = first (path_to_longident path) in
-                    if SSet.mem m !ppopen 
-                    then make_Texp_apply (make_Texp_ident (path_set path) ~typ:cty.ctyp_type) (typelist_to_arglist typelist)
-                    else make_Texp_apply (make_Texp_ident (path_ident_create "_pp__dump") ~typ:cty.ctyp_type)
-                                         [Nolabel,Some (make_Texp_constant 
-                                                            (Const_string ("< "^m^"'s type without OCaml@p >",None)))]
-                    
-            end
-    | Ttyp_object (str_att_cty_list,_) ->
-            let case_list = make_caselist_obj (fun x -> x) str_att_cty_list in
-            make_Texp_apply (make_Texp_ident (path_ident_create "_pp__object"))
-                            [Nolabel,Some (make_Texp_function case_list)]
-    | Ttyp_class (path,_,typelist) ->
-            let m = first (path_to_longident path) in
-            if SSet.mem m !ppopen 
-            then make_Texp_apply (make_Texp_ident (path_set path) ~typ:cty.ctyp_type) (typelist_to_arglist typelist)
-            else make_Texp_apply (make_Texp_ident (path_ident_create "_pp__dump") ~typ:cty.ctyp_type)
-                                 [Nolabel,Some (make_Texp_constant 
-                                                    (Const_string ("< "^m^"'s Type without OCaml@p >",None)))]
-    | Ttyp_alias (ctyp,s) ->
-            (*
-            let c = check_params_alias ty_name s in
-            if c
-            then
-                select_pp_core ctyp
-            else
-            *)
-                (make_Texp_let 
-                     Recursive 
-                     [{ vb_pat = make_Tpat_var ("_pp_'"^s);
-                        vb_expr = app_prfx (select_pp_core ctyp);
-                        vb_attributes = [];
-                        vb_loc = Location.none }]
-                     (make_Texp_ident (path_ident_create ("_pp_'"^s))))
-    | Ttyp_variant (row_field_list,_,_) ->
-            let case_list = make_caselist_var [] row_field_list in
-            Hashtbl.add caselist_tbl ty_name case_list;
-            make_Texp_apply (make_Texp_ident (path_ident_create "_pp__variant"))
-                            [Nolabel,Some (make_Texp_function case_list)]
-    | Ttyp_poly (sl,ctyl) ->
-            (* TODO *)
-            select_pp cty.ctyp_type
-    | Ttyp_package p ->
-            (* TODO *)
-            select_pp cty.ctyp_type
 
 (*
  *  * prepare for variant pp
