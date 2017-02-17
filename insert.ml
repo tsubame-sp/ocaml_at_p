@@ -1,68 +1,44 @@
+(* ======================================================================
+ * Project Name    : OCaml@p
+ * File Name       : insert.ml
+ * Encoding        : utf-8
+ 
+ * Copyright © 2016 Kenji Sakurai. All rights reserved.
+ * ======================================================================
+ *)
+
 open Asttypes
 open Typedtree
 open Helper
 open Longident
 
 (* _this expression *)
-let expr_this typ =
-    { exp_desc = Texp_ident (Path.Pident (Ident.create "_this"),
-                             {txt = Lident "_this";loc = Location.none},
-                             {Types.val_type = typ;
-                              Types.val_kind = Types.Val_reg;
-                              Types.val_loc = Location.none;
-                              Types.val_attributes = []});
-      exp_loc = Location.none;
-      exp_extra = [];
-      exp_type = typ;
-      exp_env = Env.empty;
-      exp_attributes = []
-    }
+let expr_this typ = make_Texp_ident ~typ:typ (path_ident_create "_this")
+
+(* Format.eprintf *)
+let expr_eprintf = 
+    make_Texp_ident (Path.Pdot (path_ident_create "Format","eprintf",0))
 
 (* actual insert function *)
 let insert_pp expr print_expr b extra =
-    let expr_newline =
+    let expr_format =
+        (*
+         * Fix me: constant:string -> construct:format
+         * *)
         if b
         then
-            { exp_desc = 
-                Texp_sequence 
-                    ({ exp_desc = 
-                        Texp_apply (make_Texp_ident (path_ident_create "_pp_newline"),
-                                   [(Nolabel,Some expr_std_formatter);
-                                    (Nolabel,Some (make_Texp_construct (Lident "()") []))]);
-                       exp_loc = Location.none;
-                       exp_extra = [];
-                       exp_type = type_none;
-                       exp_env = expr.exp_env;
-                       exp_attributes = []
-                     },
-                     expr);
-              exp_loc = Location.none;
-              exp_extra = [];
-              exp_type = expr.exp_type;
-              exp_env = expr.exp_env;
-              exp_attributes = []
-            }
-        else expr
+            make_Texp_constant (Const_string ("%a@.",None))
+        else
+            make_Texp_constant (Const_string ("%a@?",None))
     in
     let expr_pp pp = 
-        { exp_desc = 
-            Texp_sequence 
-                ({ exp_desc = 
-                    Texp_apply (pp,
-                               [Nolabel,Some expr_std_formatter;Nolabel,Some print_expr]);
-                   exp_loc = Location.none;
-                   exp_extra = [];
-                   exp_type = type_none;
-                   exp_env = expr.exp_env;
-                   exp_attributes = []
-                 },
-                 expr_newline);
-          exp_loc = Location.none;
-          exp_extra = [];
-          exp_type = expr.exp_type;
-          exp_env = expr.exp_env;
-          exp_attributes = []
-        }
+        make_Texp_sequence
+           (make_Texp_apply
+               expr_eprintf
+               [Nolabel,Some expr_format;
+                Nolabel,Some pp;
+                Nolabel,Some print_expr])
+           expr
     in
     let pp = select_pp print_expr.exp_type
     in

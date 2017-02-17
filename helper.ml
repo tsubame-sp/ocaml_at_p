@@ -1,5 +1,16 @@
+(* ======================================================================
+ * Project Name    : OCaml@p
+ * File Name       : helper.ml
+ * Encoding        : utf-8
+ 
+ * Copyright © 2016 Kenji Sakurai. All rights reserved.
+ * ======================================================================
+ *)
+
+(*
 let debug_n = ref 0
 let pe = print_endline
+*)
 
 module SSet = Set.Make(struct
     type t = string
@@ -13,6 +24,7 @@ open Typedtree
 open Longident
 open Ident
 
+(*
 (* debug type_expr *)
 let check_type ty =
     pe (match ty.desc with
@@ -30,6 +42,7 @@ let check_type ty =
         | Tunivar _ -> "Tunivar"
         | Tpoly _ -> "Tunivar"
         | Tpackage _ -> "Tpackage")
+*)
 
 (* ppopen check *)
 let ppopen = ref SSet.empty
@@ -254,7 +267,7 @@ let make_Texp_ident ?(typ=type_none) path =
                               val_attributes=[]});
       exp_loc = Location.none;
       exp_extra = [];
-      exp_type = type_none;
+      exp_type = typ;
       exp_env = Env.empty;
       exp_attributes = []
     }
@@ -408,9 +421,11 @@ let set_ps name params =
     in
     from_list ps
 
+(*
 (* expr of std_formatter *)
 let expr_std_formatter = 
     make_Texp_ident (Path.Pdot (Path.Pident (Ident.create "Format"),"std_formatter",0))
+*)
 
 (* For alias (as) loop *)
 let pre = ref SSet.empty

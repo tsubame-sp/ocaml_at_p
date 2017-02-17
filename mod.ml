@@ -1,3 +1,12 @@
+(* ======================================================================
+ * Project Name    : OCaml@p
+ * File Name       : mod.ml
+ * Encoding        : utf-8
+ 
+ * Copyright © 2016 Kenji Sakurai. All rights reserved.
+ * ======================================================================
+ *)
+
 open Format
 open Typedtree
 open Asttypes
